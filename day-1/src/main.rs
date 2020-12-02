@@ -17,6 +17,7 @@ fn main() {
     let target = 2020;
 
     for pos1 in 0..input.len() {
+        // Walk the same list but from one index further to get all 2-combinations
         for pos2 in (0..input.len()).skip(pos1 + 1) {
             let one = input[pos1].trim().parse::<i32>().unwrap();
             let other = input[pos2].trim().parse::<i32>().unwrap();
@@ -31,6 +32,7 @@ fn main() {
                 )
             }
 
+            // Walk one further to select three numbers
             for pos3 in (0..input.len()).skip(pos2 + 1) {
                 let third = input[pos3].trim().parse::<i32>().unwrap();
 
