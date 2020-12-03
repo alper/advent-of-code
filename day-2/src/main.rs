@@ -14,7 +14,7 @@ fn main() {
     for line in input.lines() {
         let parts: Vec<&str> = line.trim().split_whitespace().collect();
 
-        let count_parts: Vec<&str> = parts[0].split("-").collect();
+        let count_parts: Vec<&str> = parts[0].split('-').collect();
         let mi = count_parts[0].parse::<i32>().unwrap();
         let ma = count_parts[1].parse::<i32>().unwrap();
 
@@ -39,7 +39,7 @@ fn main() {
 fn check_count(minimum: i32, maximum: i32, letter: char, password: &str) -> bool {
     let n = password.chars().filter(|c| *c == letter).count() as i32;
 
-    return n >= minimum && n <= maximum;
+    n >= minimum && n <= maximum
 }
 
 fn check_pos(pos1: i32, pos2: i32, letter: char, password: &str) -> bool {

@@ -26,7 +26,7 @@ fn main() {
     println!("Product of all the results: {:?}", multiplication);
 }
 
-fn tree_count(jump: (usize, usize), data: &Vec<Vec<char>>) -> i32 {
+fn tree_count(jump: (usize, usize), data: &[Vec<char>]) -> i32 {
     let mut pos = (0, 0);
     let band_width = data[0].len();
 
