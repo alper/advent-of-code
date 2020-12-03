@@ -33,3 +33,5 @@ fn main() {
     println!("Data: {:?}", data);
     println!("Counts: {}", count);
 }
+
+fn tree_count(jump: (i32, i32), data: Vec<Vec<char>>) -> i32 {}
