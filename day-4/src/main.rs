@@ -4,19 +4,9 @@ use std::iter::FromIterator;
 
 fn main() {
     let input = fs::read_to_string("input.txt").expect("Dead file");
-    let blocks: Vec<&str> = input.split("\n\n").collect();
+    let count = input.split("\n\n").filter(|b| check(b)).count();
 
-    let mut count = 0;
-
-    for el in blocks {
-        if !check(&el) {
-            println!("Failed");
-        } else {
-            count += 1
-        }
-    }
-
-    println!("Valid passports: {}", count);
+    println!("Valid passports: {:?}", count);
 }
 
 fn check(block: &str) -> bool {
