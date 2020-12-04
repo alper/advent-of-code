@@ -19,10 +19,7 @@ fn check(block: &str) -> bool {
             .map(|f| f.split(':').next().unwrap()),
     );
 
-    let diff = required_fields
-        .difference(&present_fields)
-        .copied()
-        .collect::<Vec<&str>>();
+    let diff = required_fields.difference(&present_fields);
 
-    diff.is_empty()
+    diff.copied().next().is_none()
 }
