@@ -46,22 +46,22 @@ fn check_contents(input: &str) -> IResult<&str, (&str, &str, u16, u16, u16)> {
         check_issue_year,
         check_expiry_year,
     ))(input)
-
-    // dbg_dmp(
-    //     permutation((
-    //         check_eye_color,
-    //         check_passport_id,
-    //         check_birth_year,
-    //         check_issue_year,
-    //     )),
-    //     "te",
-    // )(input)
 }
 
+#[test]
 fn test_check_contents() {
     assert_eq!(
         check_contents("pid:123456789 ecl:amb byr:1981 iyr:2020 eyr:2020"),
         Ok(("", ("amb", "123456789", 1981, 2020, 2020)))
+    );
+
+    assert_eq!(
+        check_contents(
+            r"iyr:2011
+        pid:123456789 ecl:amb
+        byr:1981 eyr:2025"
+        ),
+        Ok(("", ("amb", "123456789", 1981, 2011, 2025)))
     );
 
     assert_eq!(
@@ -87,7 +87,7 @@ fn check_expiry_year(input: &str) -> IResult<&str, u16> {
 
 fn check_year_record<'a>(
     input: &'a str,
-    field: &'a str,
+    field: &str,
     lower_bound: u16,
     upper_bound: u16,
 ) -> IResult<&'a str, u16> {
