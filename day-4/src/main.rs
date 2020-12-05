@@ -2,6 +2,7 @@ extern crate nom;
 
 use std::collections::HashSet;
 use std::fs;
+use std::io;
 use std::iter::FromIterator;
 
 use nom::{
@@ -86,28 +87,23 @@ fn check_expiry_year(input: &str) -> IResult<&str, u16> {
 
 fn check_year_record<'a>(
     input: &'a str,
-    field: &str,
+    field: &'a str,
     lower_bound: u16,
     upper_bound: u16,
 ) -> IResult<&'a str, u16> {
-    let field = field.to_string() + ":";
-
-    let (_, number) = terminated(
+    terminated(
         preceded(
-            tag(field.as_str()),
-            map_res(digit1, |s: &str| s.parse::<u16>()),
+            tag((field.to_string() + ":").as_str()),
+            map_res(digit1, |s: &str| match s.parse::<u16>() {
+                Ok(n) if n < lower_bound || n > upper_bound => {
+                    Err(io::Error::new(io::ErrorKind::Other, "out of range"))
+                }
+                Ok(n) => Ok(n),
+                Err(e) => Err(io::Error::new(io::ErrorKind::Other, e.to_string())),
+            }),
         ),
         multispace0,
-    )(input)?;
-
-    if number >= lower_bound && number <= upper_bound {
-        return Ok(("", number));
-    } else {
-        return Err(nom::Err::Error(nom::error::Error::new(
-            "",
-            nom::error::ErrorKind::Digit,
-        )));
-    }
+    )(input)
 }
 
 #[test]
