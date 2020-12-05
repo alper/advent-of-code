@@ -7,13 +7,11 @@ use std::iter::FromIterator;
 
 use nom::{
     branch::{alt, permutation},
-    bytes::complete::{tag, take_while, take_while_m_n},
+    bytes::complete::{tag, take_till, take_while_m_n},
     character::complete::{digit1, multispace0},
-    character::is_alphanumeric,
     combinator::{map_res, not, opt},
     sequence::{preceded, terminated},
-    IResult,
-    dbg_dmp
+    IResult
 };
 
 fn main() {
@@ -22,19 +20,17 @@ fn main() {
 
     println!("Valid passports: {:?}", count);
 
-    for l in input.split("\n\n") {
-        println!("Input: {}", l);
+    let mut deep_count = 0;
 
+    for l in input.split("\n\n") {
         let c = check_contents(l);
 
-        println!("Conents: {:?}", c);
-        println!("");
+        if c.is_ok() {
+            deep_count += 1;
+        }
     }
-    // let deep_count = input
-    //     .split("\n\n")
-    //     .filter(|b| !check_contents(b).is_err())
-    //     .count();
-    // println!("Valid content passports: {}", deep_count);
+
+    println!("Valid content passports: {}", deep_count);
 }
 
 fn check(block: &str) -> bool {
@@ -81,13 +77,26 @@ fn test_check_contents() {
         Ok(("", ("amb", "123456789", 1981, 2011, 2025, "ffffff", 60, None)))
     );
 
-    assert_eq!(
-        check_contents("pid:123456789    "),
-        Err(nom::Err::Error(nom::error::Error::new(
-            "",
-            nom::error::ErrorKind::Tag,
-        )))
-    );
+    assert_eq!(check_contents(r"pid:087499704 hgt:74in ecl:grn iyr:2012 eyr:2030 byr:1980
+    hcl:#623a2f"), Ok(("", ("grn", "087499704", 1980, 2012, 2030, "623a2f", 74, None))));
+    assert_eq!(check_contents(r"eyr:2029 ecl:blu cid:129 byr:1989
+    iyr:2014 pid:896056539 hcl:#a97842 hgt:165cm"), Ok(("", ("blu", "896056539", 1989, 2014, 2029, "a97842", 165, Some("129")))));
+    assert_eq!(check_contents(r"hcl:#888785
+    hgt:164cm byr:2001 iyr:2015 cid:88
+    pid:545766238 ecl:hzl
+    eyr:2022"), Ok(("", ("hzl", "545766238", 2001, 2015, 2022, "888785", 164, Some("88")))));
+    assert_eq!(check_contents(r"iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719"), Ok(("", ("blu", "093154719", 1944, 2010, 2021, "b6652a", 158, None))));
+
+    assert!(check_contents(r"eyr:1972 cid:100
+    hcl:#18171d ecl:amb hgt:170 pid:186cm iyr:2018 byr:1926").is_err());
+    assert!(check_contents(r"iyr:2019
+    hcl:#602927 eyr:1967 hgt:170cm
+    ecl:grn pid:012533040 byr:1946").is_err());
+    assert!(check_contents(r"hcl:dab227 iyr:2012
+    ecl:brn hgt:182cm pid:021572410 eyr:2020 byr:1992 cid:277").is_err());
+    assert!(check_contents(r"hgt:59cm ecl:zzz
+    eyr:2038 hcl:74454a iyr:2023
+    pid:3556412378 byr:2007").is_err());
 }
 
 fn check_birth_year(input: &str) -> IResult<&str, u16> {
@@ -159,13 +168,12 @@ fn test_check_eye_color() {
 }
 
 fn check_cid(input: &str) -> IResult<&str, Option<&str>> {
-    opt(preceded(tag("cid:"), take_while(|c:char| c.is_alphanumeric())))(input)
-    // opt(terminated(preceded(tag("cid:"), take_while(|c| is_alphanumeric(c))), multispace0))(input)
+    opt(terminated(preceded(tag("cid:"), take_till(|c| c == ' ' || c == '\n')), multispace0))(input)
 }
 
 #[test]
 fn test_check_cid() {
-    assert_eq!(check_cid("cid:123alper  lbabla"), Ok(("  lbabla", Some("123alper"))));
+    assert_eq!(check_cid("cid:123alper  lbabla"), Ok(("lbabla", Some("123alper"))));
     assert_eq!(check_cid("eid:123alper  lbabla"), Ok(("eid:123alper  lbabla", None)));
     assert_eq!(check_cid("   cid:123alper  lbabla"), Ok(("   cid:123alper  lbabla", None)));
     assert_eq!(check_cid("cid:alper"), Ok(("", Some("alper"))));
@@ -203,6 +211,7 @@ fn test_check_hair_color() {
     assert_eq!(check_hair_color("hcl:#000000  "), Ok(("", "000000")));
 
     assert!(check_hair_color("hcl:#11111").is_err());
+    assert!(check_hair_color("hcl:5d90f0").is_err());
 }
 
 fn check_height(input: &str) -> IResult<&str, u16> {
