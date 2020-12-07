@@ -55,6 +55,16 @@ fn main() {
     }
 
     println!("Colors that can contain shiny gold: {}", count-1);
+
+    println!("Total number of bags: {}", bag_count(&graph, *target)-1);
+}
+
+fn bag_count(graph: &Graph<String, u32>, start: NodeIndex) -> u32 {
+    let mut count = 1;
+    for e in graph.edges(start) {
+        count += e.weight() * bag_count(graph, e.target())
+    }
+    count
 }
 
 fn parse_line(line: &str) -> (String, Vec<(String, u32)>) {
