@@ -62,7 +62,7 @@ fn main() {
 fn bag_count(graph: &Graph<String, u32>, start: NodeIndex) -> u32 {
     let mut count = 1;
     for e in graph.edges(start) {
-        count += e.weight() * bag_count(graph, e.target())
+        count += e.weight() * bag_count(graph, e.target());
     }
     count
 }
