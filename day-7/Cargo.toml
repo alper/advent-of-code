@@ -8,4 +8,4 @@ edition = "2018"
 
 [dependencies]
 regex = "1"
-trees = "0.3.0"
+petgraph = "0.5.1"
