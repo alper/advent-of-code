@@ -29,7 +29,7 @@ fn main() {
             }
         };
 
-        for col in colors {
+        for (col, count) in colors {
             let contained_node = match nodes.get(col.as_str()) {
                 Some(n) => *n,
                 None => {
@@ -39,7 +39,7 @@ fn main() {
                 }
             };
 
-            graph.add_edge(node, contained_node, 0);
+            graph.add_edge(node, contained_node, count);
         }
     }
 
@@ -49,7 +49,7 @@ fn main() {
 
     let mut count = 0;
     for (color, node) in nodes.iter() {
-        if (has_path_connecting(&graph, *node, *target, None)) {
+        if has_path_connecting(&graph, *node, *target, None) {
             count += 1;
         }
     }
@@ -57,7 +57,7 @@ fn main() {
     println!("Colors that can contain shiny gold: {}", count-1);
 }
 
-fn parse_line(line: &str) -> (String, Vec<String>) {
+fn parse_line(line: &str) -> (String, Vec<(String, u32)>) {
     let re = Regex::new(r"(.+?) bags contain(.+?)\.").unwrap();
 
     let mut color = String::from("");
@@ -69,12 +69,12 @@ fn parse_line(line: &str) -> (String, Vec<String>) {
 
             let re_contained_single = Regex::new("1 (.+?) bag").unwrap();
             for cap in re_contained_single.captures_iter(contained_bags.as_str()) {
-                contained_colors.push(cap[1].to_owned());
+                contained_colors.push((cap[1].to_owned(), 1));
             }
 
             let re_contained_several = Regex::new(r"([2-9]|[1-9][0-9]) (.+?) bags").unwrap();
             for cap in re_contained_several.captures_iter(contained_bags.as_str()) {
-                contained_colors.push(cap[2].to_owned());
+                contained_colors.push((cap[2].to_owned(), cap[1].parse::<u32>().unwrap()));
             }
         }
     }
