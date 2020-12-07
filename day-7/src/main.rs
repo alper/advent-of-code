@@ -48,7 +48,7 @@ fn main() {
     let target = nodes.get(&String::from("shiny gold")).unwrap();
 
     let mut count = 0;
-    for (color, node) in nodes.iter() {
+    for (_color, node) in nodes.iter() {
         if has_path_connecting(&graph, *node, *target, None) {
             count += 1;
         }
