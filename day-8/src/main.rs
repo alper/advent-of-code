@@ -20,6 +20,20 @@ fn main() {
         instructions.push(parse_line(line));
     }
 
+    println!(
+        "Accumulator after halt: {}",
+        run_program_until_loop(instructions)
+    );
+}
+
+#[derive(PartialEq, Debug)]
+enum Instruction {
+    Nop(i32),
+    Acc(i32),
+    Jmp(i32),
+}
+
+fn run_program_until_loop(prog: Vec<Instruction>) -> i32 {
     // Run program
     let mut accumulator = 0i32;
     let mut instruction_pointer = 0i32;
@@ -28,7 +42,7 @@ fn main() {
     instruction_history.insert(instruction_pointer);
 
     loop {
-        match instructions[instruction_pointer as usize] {
+        match prog[instruction_pointer as usize] {
             Instruction::Nop(_n) => {
                 instruction_pointer += 1;
             }
@@ -45,14 +59,8 @@ fn main() {
             break;
         }
     }
-    println!("Accumulator after halt: {}", accumulator);
-}
 
-#[derive(PartialEq, Debug)]
-enum Instruction {
-    Nop(i32),
-    Acc(i32),
-    Jmp(i32),
+    accumulator
 }
 
 fn parse_line(l: &str) -> Instruction {
