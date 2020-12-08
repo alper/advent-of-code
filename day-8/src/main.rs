@@ -22,7 +22,7 @@ fn main() {
 
     println!(
         "Accumulator after halt: {}",
-        run_program_until_loop(instructions)
+        run_program_until_loop(instructions).1
     );
 }
 
@@ -33,7 +33,9 @@ enum Instruction {
     Jmp(i32),
 }
 
-fn run_program_until_loop(prog: Vec<Instruction>) -> i32 {
+/// Run program
+/// Return true if it looped and was halted, false if it ran through
+fn run_program_until_loop(prog: Vec<Instruction>) -> (bool, i32) {
     // Run program
     let mut accumulator = 0i32;
     let mut instruction_pointer = 0i32;
@@ -56,11 +58,13 @@ fn run_program_until_loop(prog: Vec<Instruction>) -> i32 {
         }
 
         if !instruction_history.insert(instruction_pointer) {
-            break;
+            return (true, accumulator);
+        }
+
+        if instruction_pointer == prog.len() as i32 {
+            return (false, accumulator);
         }
     }
-
-    accumulator
 }
 
 fn parse_line(l: &str) -> Instruction {
