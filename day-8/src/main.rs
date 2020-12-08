@@ -60,12 +60,12 @@ fn parse_line(l: &str) -> Instruction {
     let ins = parts.next();
     let offs = parts.next().unwrap().parse::<i32>().unwrap();
 
-    return match ins {
+    match ins {
         Some("nop") => Instruction::Nop(offs),
         Some("acc") => Instruction::Acc(offs),
         Some("jmp") => Instruction::Jmp(offs),
         _ => Instruction::Nop(0),
-    };
+    }
 }
 
 #[test]
