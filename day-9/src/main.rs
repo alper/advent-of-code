@@ -1,7 +1,7 @@
 use std::fs;
 
 fn main() {
-    let test_input = r"35
+    let _test_input = r"35
     20
     15
     25
@@ -29,25 +29,27 @@ fn main() {
         .map(|l| l.trim().parse::<u64>().unwrap())
         .collect();
 
-    println!("Parsed: {:?}", parsed);
+    println!(
+        "The number {} is not correct",
+        find_faulty_number(25, &parsed)
+    );
+}
 
-    let window_size = 25;
+fn find_faulty_number(window_size: usize, series: &[u64]) -> u64 {
     let mut window_start = 0;
 
-    let faulty_number = loop {
-        let number_to_test = parsed[window_start + window_size];
+    loop {
+        let number_to_test = series[window_start + window_size];
 
         if !check_number(
             number_to_test,
-            &parsed[window_start..window_start + window_size],
+            &series[window_start..window_start + window_size],
         ) {
             break number_to_test;
         }
 
         window_start += 1;
-    };
-
-    println!("The number {} is not correct", faulty_number);
+    }
 }
 
 fn check_number(num: u64, series: &[u64]) -> bool {
@@ -66,7 +68,7 @@ fn check_number(num: u64, series: &[u64]) -> bool {
         }
     }
 
-    return found;
+    found
 }
 
 #[test]
