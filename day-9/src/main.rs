@@ -1,7 +1,7 @@
 use std::fs;
 
 fn main() {
-    let _test_input = r"35
+    let test_input = r"35
     20
     15
     25
@@ -22,16 +22,31 @@ fn main() {
     309
     576";
 
-    let input = fs::read_to_string("input.txt").expect("Dead file");
-
-    let parsed: Vec<u64> = input
+    let test_input_parsed: Vec<u64> = test_input
         .lines()
         .map(|l| l.trim().parse::<u64>().unwrap())
         .collect();
 
+    let input = fs::read_to_string("input.txt").expect("Dead file");
+
+    let input_parsed: Vec<u64> = input
+        .lines()
+        .map(|l| l.trim().parse::<u64>().unwrap())
+        .collect();
+
+    let faulty_number = find_faulty_number(25, &input_parsed);
+    println!("The number {} is not correct", faulty_number);
+
     println!(
-        "The number {} is not correct",
-        find_faulty_number(25, &parsed)
+        "Contiguous set on test: {:?}",
+        find_contiguous_set(127, &test_input_parsed)
+    );
+
+    let contiguous_set = find_contiguous_set(faulty_number, &input_parsed);
+    println!("Contiguous set on real: {:?}", contiguous_set);
+    println!(
+        "Answer on part 2: {}",
+        contiguous_set.iter().min().unwrap() + contiguous_set.iter().max().unwrap()
     );
 }
 
@@ -50,6 +65,26 @@ fn find_faulty_number(window_size: usize, series: &[u64]) -> u64 {
 
         window_start += 1;
     }
+}
+
+fn find_contiguous_set(target: u64, series: &[u64]) -> &[u64] {
+    let mut window_size = 3;
+
+    loop {
+        for r in series.windows(window_size) {
+            if r.iter().sum::<u64>() == target {
+                return r;
+            }
+        }
+
+        window_size += 1;
+
+        if window_size > series.len() {
+            break;
+        }
+    }
+
+    &[]
 }
 
 fn check_number(num: u64, series: &[u64]) -> bool {
