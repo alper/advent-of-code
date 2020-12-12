@@ -170,6 +170,8 @@ impl Direction {
     }
 }
 
+// The positive grid for x/y is to the South-East
+// East 17, North 3 = x: 17, y: -3
 #[derive(Debug)]
 struct Ship {
     x: i32,
