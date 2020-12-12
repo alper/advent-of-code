@@ -1,13 +1,20 @@
+use std::fs;
+
 fn main() {
-    let test_input = r"F10
+    part1();
+    part2();
+}
+
+fn part1() {
+    let _test_input = r"F10
 N3
 F7
 R90
 F11";
 
-    let mut ship = Ship {dir: Direction::E, x: 0, y: 0};
+    let input = fs::read_to_string("input.txt").expect("Dead file");
 
-    let actions = test_input.lines().map(|l| {
+    let actions = input.lines().map(|l| {
         // println!("/{}/", l);
         let val = l[1..].trim().parse::<i32>().unwrap();
 
@@ -23,6 +30,7 @@ F11";
         }
     });
 
+    let mut ship = Ship {dir: Direction::E, x: 0, y: 0};
     for action in actions {
         println!("Action: {:?}", action);
 
@@ -46,6 +54,56 @@ F11";
     }
 
     println!("Answer part 1: {}", ship.x.abs() + ship.y.abs());
+}
+
+fn part2() {
+    let _test_input = r"F10
+N3
+F7
+R90
+F11";
+
+    let input = fs::read_to_string("input.txt").expect("Dead file");
+
+    let actions = input.lines().map(|l| {
+        // println!("/{}/", l);
+        let val = l[1..].trim().parse::<i32>().unwrap();
+
+        match &l[..1] {
+            "N" => Action::N(val),
+            "E" => Action::E(val),
+            "S" => Action::S(val),
+            "W" => Action::W(val),
+            "L" => Action::L(val),
+            "R" => Action::R(val),
+            "F" => Action::F(val),
+            _ => Action::F(0)
+        }
+    });
+
+    let mut ship = Ship {dir: Direction::E, x: 0, y: 0};
+    let mut waypoint = WayPoint {x: 10, y: -1};
+
+    for action in actions {
+        println!("Action: {:?}", action);
+
+        match action {
+            Action::N(n) => waypoint.y -= n,
+            Action::S(n) => waypoint.y += n,
+            Action::E(n) => waypoint.x += n,
+            Action::W(n) => waypoint.x -= n,
+            Action::F(n) => {
+                ship.x += waypoint.x * n;
+                ship.y += waypoint.y * n;
+            },
+            Action::R(deg) => waypoint = waypoint.rotate(Action::R(deg)),
+            Action::L(deg) => waypoint = waypoint.rotate(Action::L(deg)),
+        }
+        println!("Ship: {:?}", ship);
+        println!("Waypoint: {:?}", waypoint);
+    }
+
+    println!("Answer part 2: {}", ship.x.abs() + ship.y.abs());
 }
 
 #[derive(Debug)]
@@ -78,33 +136,33 @@ impl Direction {
         match self {
             Direction::N => {
                 match rotation {
-                    90 => return Direction::E,
-                    180 => return Direction::S,
-                    270 => return Direction::W,
-                    _ => return Direction::N
+                    90 => Direction::E,
+                    180 => Direction::S,
+                    270 => Direction::W,
+                    _ => Direction::N
                 }
             }
             Direction::E => {
                 match rotation {
-                    90 => return Direction::S,
-                    180 => return Direction::W,
-                    270 => return Direction::N,
-                    _ => return Direction::E
+                    90 => Direction::S,
+                    180 => Direction::W,
+                    270 => Direction::N,
+                    _ => Direction::E
                 }
             }
             Direction::S => {
                 match rotation {
-                    90 => return Direction::W,
-                    180 => return Direction::N,
-                    270 => return Direction::E,
+                    90 => Direction::W,
+                    180 => Direction::N,
+                    270 => Direction::E,
                     _ => Direction::S
                 }
             }
             Direction::W => {
                 match rotation {
-                    90 => return Direction::N,
-                    180 => return Direction::E,
-                    270 => return Direction::S,
+                    90 => Direction::N,
+                    180 => Direction::E,
+                    270 => Direction::S,
                     _ => Direction::W
                 }
             }
@@ -116,5 +174,41 @@ impl Direction {
 struct Ship {
     x: i32,
     y: i32,
-    dir: Direction
+    dir: Direction,
+}
+
+#[derive(Debug)]
+struct WayPoint {
+    x: i32,
+    y: i32,
+}
+
+impl PartialEq for WayPoint {
+    fn eq(&self, other: &Self) -> bool {
+        self.x == other.x && self.y == other.y
+    }
+}
+
+impl Eq for WayPoint{}
+
+impl WayPoint {
+    fn rotate(&self, act: Action) -> WayPoint {
+        let rotation = match act {
+            Action::L(deg) => 360 - deg,
+            Action::R(deg) => deg,
+            _ => 0
+        };
+
+        match rotation {
+            90 => WayPoint{x: -self.y, y: self.x},
+            180 => WayPoint{x: -self.x, y: -self.y},
+            270 => WayPoint{x: self.y, y: -self.x},
+            _ => WayPoint{x: self.x, y: self.y},
+        }
+    }
+}
+
+#[test]
+fn test_rotate() {
+    assert_eq!(WayPoint{x: 10, y: -4}.rotate(Action::R(90)), WayPoint{x: 4, y: 10});
 }
