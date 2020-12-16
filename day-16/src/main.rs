@@ -19,15 +19,15 @@ fn main() {
 
             let parts: Vec<_> = previous_parts[1].split(' ').collect();
 
-            println!("Parts: {:?}", parts);
+            // println!("Parts: {:?}", parts);
 
             let first_range = parse_range(parts[1]);
             let second_range = parse_range(parts[3]);
 
-            println!(
-                "First range /{:?}/ second range /{:?}/",
-                first_range, second_range
-            );
+            // println!(
+            //     "First range /{:?}/ second range /{:?}/",
+            //     first_range, second_range
+            // );
 
             ranges.insert(
                 field_name,
@@ -51,7 +51,7 @@ fn main() {
         let mut entire_ticket_valid = true;
 
         for val in &ticket {
-            println!("Checking value: {}", val);
+            // println!("Checking value: {}", val);
 
             let mut valid = false;
 
@@ -83,6 +83,12 @@ fn main() {
     println!("Answer to part 1: {}", error_sum);
 
     println!("Valid number of tickets: {}", valid_nearbys.len());
+
+    let ticket_fields: Vec<Vec<u64>> = (0..valid_nearbys[0].len())
+        .map(|n| valid_nearbys.iter().map(move |v| v[n]).collect())
+        .collect();
+
+    println!("Ticket fields: {:?}", ticket_fields);
 }
 
 fn parse_range(fragment: &str) -> (u64, u64) {
@@ -92,4 +98,14 @@ fn parse_range(fragment: &str) -> (u64, u64) {
         parts[0].parse::<u64>().unwrap(),
         parts[1].parse::<u64>().unwrap(),
     )
+}
+
+fn validate_values(values: &[u64], range: (u64, u64, u64, u64)) -> bool {
+    let mut valid = true;
+
+    for &value in values {
+        if !((value >= range.0 && value <= range.1) || (value >= range.2 && value <= range.3)) {}
+    }
+
+    valid
 }
