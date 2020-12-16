@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::fs;
 
 fn main() {
@@ -5,27 +6,33 @@ fn main() {
 
     let mut nearby_tickets = false;
     let mut nearbys: Vec<Vec<u64>> = vec![];
-    let mut ranges: Vec<(u64, u64)> = vec![];
+    let mut valid_nearbys: Vec<Vec<u64>> = vec![];
+
+    let mut ranges: HashMap<&str, (u64, u64, u64, u64)> = HashMap::new();
 
     let mut error_sum = 0;
 
     for line in file_contents.lines() {
         if line.contains("or") {
-            let parts: Vec<_> = line.split(" ").collect();
+            let previous_parts: Vec<_> = line.split(':').collect();
+            let field_name = previous_parts[0];
+
+            let parts: Vec<_> = previous_parts[1].split(' ').collect();
 
             println!("Parts: {:?}", parts);
 
-            let first_range = parts[parts.len() - 3];
-            let second_range = parts[parts.len() - 1];
+            let first_range = parse_range(parts[1]);
+            let second_range = parse_range(parts[3]);
 
-            // println!(
-            //     "First range /{:?}/ second range /{:?}/",
-            //     parse_range(first_range),
-            //     parse_range(second_range)
-            // );
+            println!(
+                "First range /{:?}/ second range /{:?}/",
+                first_range, second_range
+            );
 
-            ranges.push(parse_range(first_range));
-            ranges.push(parse_range(second_range));
+            ranges.insert(
+                field_name,
+                (first_range.0, first_range.1, second_range.0, second_range.1),
+            );
         }
 
         if line.contains("nearby tickets:") {
@@ -41,13 +48,21 @@ fn main() {
     }
 
     for ticket in nearbys {
-        for val in ticket {
+        let mut entire_ticket_valid = true;
+
+        for val in &ticket {
             println!("Checking value: {}", val);
 
             let mut valid = false;
 
-            for range in ranges.iter() {
-                if val >= range.0 && val <= range.1 {
+            for range in ranges.values() {
+                if val >= &range.0 && val <= &range.1 {
+                    valid = true;
+
+                    break;
+                }
+
+                if val >= &range.2 && val <= &range.3 {
                     valid = true;
 
                     break;
@@ -56,11 +71,18 @@ fn main() {
 
             if !valid {
                 error_sum += val;
+                entire_ticket_valid = false;
             }
+        }
+
+        if entire_ticket_valid {
+            valid_nearbys.push(ticket);
         }
     }
 
     println!("Answer to part 1: {}", error_sum);
+
+    println!("Valid number of tickets: {}", valid_nearbys.len());
 }
 
 fn parse_range(fragment: &str) -> (u64, u64) {
