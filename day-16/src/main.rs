@@ -99,7 +99,7 @@ fn main() {
 
     let mut possible_rules: Vec<HashSet<&str>> = Vec::new();
 
-    for (i, field_vals) in ticket_fields.iter().enumerate() {
+    for (_i, field_vals) in ticket_fields.iter().enumerate() {
         // println!("Checking {}th values: {:?}", i, field_vals);
 
         let mut rules_for_field = HashSet::new();
@@ -129,8 +129,7 @@ fn main() {
         let single = possible_rules
             .iter()
             .enumerate()
-            .filter(|(i, f)| f.len() == 1)
-            .next()
+            .find(|(_i, f)| f.len() == 1)
             .unwrap();
         println!("Single: {:?}", single);
 
@@ -138,14 +137,11 @@ fn main() {
         allocations.insert(single.0, field_name);
 
         // remove from all other possible
-        for i in 0..possible_rules.len() {
-            {
-                let s = &mut possible_rules[i];
-                s.remove(field_name);
-            }
+        for s in &mut possible_rules {
+            s.remove(field_name);
         }
 
-        if possible_rules.iter().all(|s| s.len() == 0) {
+        if possible_rules.iter().all(|s| s.is_empty()) {
             break;
         }
     }
@@ -156,8 +152,8 @@ fn main() {
         "Answer 2? {}",
         allocations
             .iter()
-            .filter(|(i, s)| s.starts_with("departure"))
-            .map(|(i, s)| my_ticket[*i])
+            .filter(|(_i, s)| s.starts_with("departure"))
+            .map(|(i, _s)| my_ticket[*i])
             .product::<u64>()
     );
 }
