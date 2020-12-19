@@ -2,6 +2,10 @@ use itertools::Itertools;
 use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
+use std::sync::atomic::{AtomicUsize, Ordering};
+
+static MAX_8: AtomicUsize = AtomicUsize::new(0);
+static MAX_11: AtomicUsize = AtomicUsize::new(0);
 
 fn main() {
     let rules_contents = fs::read_to_string("rules.txt").expect("Dead file");
@@ -28,8 +32,6 @@ fn main() {
 fn parse_rules(input: &str) -> String {
     let mut rule_map: HashMap<u32, String> = HashMap::new();
 
-    let mut max_count: HashMap<u32, u32> = HashMap::new();
-
     for line in input.lines() {
         println!("Line: {}", line);
         let mut parts = line.split(':');
@@ -38,12 +40,11 @@ fn parse_rules(input: &str) -> String {
         let rule = parts.next().unwrap().trim().to_string();
 
         rule_map.insert(index, rule);
-        max_count.insert(index, 5);
     }
 
     println!("Map: {:?}", rule_map);
 
-    return String::from("^") + &generate_regex(0, &rule_map, &max_count) + "$";
+    return String::from("^") + &generate_regex(0, &rule_map) + "$";
 }
 
 #[test]
@@ -61,11 +62,7 @@ fn test_parse_rules() {
     )
 }
 
-fn generate_regex(
-    index: u32,
-    rules: &HashMap<u32, String>,
-    max_count: &HashMap<u32, u32>,
-) -> String {
+fn generate_regex(index: u32, rules: &HashMap<u32, String>) -> String {
     let rule = rules.get(&index).unwrap();
     println!("base /{}/", rule);
 
@@ -76,13 +73,13 @@ fn generate_regex(
         println!("b {}", rule);
         return String::from("b");
     } else if rule.split(' ').count() == 2 {
-        println!("rule3: {}", rule);
+        println!("rule2: {}", rule);
 
         let res = rule
             .split(' ')
-            .map(|i| generate_regex(i.parse::<u32>().unwrap(), rules, max_count))
+            .map(|i| generate_regex(i.parse::<u32>().unwrap(), rules))
             .collect::<String>();
-        println!("Res3: {}", res);
+        println!("Res2: {}", res);
 
         return res;
     } else if rule.split(' ').count() == 5 {
@@ -97,7 +94,7 @@ fn generate_regex(
                     .split(' ')
                     .map(|lr| {
                         println!("lr: {}", lr);
-                        return generate_regex(lr.parse::<u32>().unwrap(), rules, max_count);
+                        return generate_regex(lr.parse::<u32>().unwrap(), rules);
                     })
                     .collect::<String>();
 
@@ -109,19 +106,47 @@ fn generate_regex(
         println!("Res5: {}", res);
         return String::from("(") + &res + ")";
     } else if rule.split(' ').count() == 1 {
-        return generate_regex(rule.trim().parse::<u32>().unwrap(), rules, max_count);
+        return generate_regex(rule.trim().parse::<u32>().unwrap(), rules);
     } else if rule.split(' ').count() == 3 {
         println!("rule3: {}", rule);
 
         let res = rule
             .split('|')
             .map(|b| {
-                return generate_regex(b.trim().parse::<u32>().unwrap(), rules, max_count);
+                return generate_regex(b.trim().parse::<u32>().unwrap(), rules);
             })
             .join("|");
 
         println!("Res3: {}", res);
         return String::from("(") + &res + ")";
+    } else if index == 8 {
+        let counts = MAX_8.fetch_add(1, Ordering::SeqCst);
+
+        if counts < 10 {
+            return String::from("(")
+                + &generate_regex(42, rules)
+                + "|"
+                + &generate_regex(42, rules)
+                + &generate_regex(8, rules)
+                + ")";
+        } else {
+            return generate_regex(42, rules);
+        }
+    } else if index == 11 {
+        let counts = MAX_11.fetch_add(1, Ordering::SeqCst);
+
+        if counts < 10 {
+            return String::from("(")
+                + &generate_regex(42, rules)
+                + &generate_regex(31, rules)
+                + "|"
+                + &generate_regex(42, rules)
+                + &generate_regex(11, rules)
+                + &generate_regex(31, rules)
+                + ")";
+        } else {
+            return generate_regex(42, rules) + &generate_regex(31, rules);
+        }
     } else {
         println!("Rule unimplemented: {}", rule);
         unimplemented!();
@@ -138,16 +163,8 @@ fn test_generate_regex() {
     test_map.insert(4, "\"a\"".to_string());
     test_map.insert(5, "\"b\"".to_string());
 
-    let mut count = HashMap::new();
-    count.insert(0, 5);
-    count.insert(1, 5);
-    count.insert(2, 5);
-    count.insert(3, 5);
-    count.insert(4, 5);
-    count.insert(5, 5);
-
     assert_eq!(
-        generate_regex(0, &test_map, &count),
+        generate_regex(0, &test_map),
         "a((aa|bb)(ab|ba)|(ab|ba)(aa|bb))"
     );
 }
