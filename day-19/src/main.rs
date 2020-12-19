@@ -66,10 +66,11 @@ fn generate_regex(index: u32, rules: &HashMap<u32, String>) -> String {
     let rule = rules.get(&index).unwrap();
     println!("base /{}/", rule);
 
-    if *rule == String::from("\"a\"") {
+    if *rule == "\"a\"" {
         println!("a {}", rule);
+
         return String::from("a");
-    } else if *rule == String::from("\"b\"") {
+    } else if *rule == "\"b\"" {
         println!("b {}", rule);
         return String::from("b");
     } else if rule.split(' ').count() == 2 {
