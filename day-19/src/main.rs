@@ -28,6 +28,8 @@ fn main() {
 fn parse_rules(input: &str) -> String {
     let mut rule_map: HashMap<u32, String> = HashMap::new();
 
+    let mut max_count: HashMap<u32, u32> = HashMap::new();
+
     for line in input.lines() {
         println!("Line: {}", line);
         let mut parts = line.split(':');
@@ -36,11 +38,12 @@ fn parse_rules(input: &str) -> String {
         let rule = parts.next().unwrap().trim().to_string();
 
         rule_map.insert(index, rule);
+        max_count.insert(index, 5);
     }
 
     println!("Map: {:?}", rule_map);
 
-    return String::from("^") + &generate_regex(0, &rule_map) + "$";
+    return String::from("^") + &generate_regex(0, &rule_map, &max_count) + "$";
 }
 
 #[test]
@@ -54,11 +57,15 @@ fn test_parse_rules() {
 4: "a"
 5: "b""##
         ),
-        "B"
+        "^a((aa|bb)(ab|ba)|(ab|ba)(aa|bb))$"
     )
 }
 
-fn generate_regex(index: u32, rules: &HashMap<u32, String>) -> String {
+fn generate_regex(
+    index: u32,
+    rules: &HashMap<u32, String>,
+    max_count: &HashMap<u32, u32>,
+) -> String {
     let rule = rules.get(&index).unwrap();
     println!("base /{}/", rule);
 
@@ -73,7 +80,7 @@ fn generate_regex(index: u32, rules: &HashMap<u32, String>) -> String {
 
         let res = rule
             .split(' ')
-            .map(|i| generate_regex(i.parse::<u32>().unwrap(), rules))
+            .map(|i| generate_regex(i.parse::<u32>().unwrap(), rules, max_count))
             .collect::<String>();
         println!("Res3: {}", res);
 
@@ -90,7 +97,7 @@ fn generate_regex(index: u32, rules: &HashMap<u32, String>) -> String {
                     .split(' ')
                     .map(|lr| {
                         println!("lr: {}", lr);
-                        return generate_regex(lr.parse::<u32>().unwrap(), rules);
+                        return generate_regex(lr.parse::<u32>().unwrap(), rules, max_count);
                     })
                     .collect::<String>();
 
@@ -102,14 +109,14 @@ fn generate_regex(index: u32, rules: &HashMap<u32, String>) -> String {
         println!("Res5: {}", res);
         return String::from("(") + &res + ")";
     } else if rule.split(' ').count() == 1 {
-        return generate_regex(rule.trim().parse::<u32>().unwrap(), rules);
+        return generate_regex(rule.trim().parse::<u32>().unwrap(), rules, max_count);
     } else if rule.split(' ').count() == 3 {
         println!("rule3: {}", rule);
 
         let res = rule
             .split('|')
             .map(|b| {
-                return generate_regex(b.trim().parse::<u32>().unwrap(), rules);
+                return generate_regex(b.trim().parse::<u32>().unwrap(), rules, max_count);
             })
             .join("|");
 
@@ -119,8 +126,6 @@ fn generate_regex(index: u32, rules: &HashMap<u32, String>) -> String {
         println!("Rule unimplemented: {}", rule);
         unimplemented!();
     }
-
-    String::from("B")
 }
 
 #[test]
@@ -133,5 +138,16 @@ fn test_generate_regex() {
     test_map.insert(4, "\"a\"".to_string());
     test_map.insert(5, "\"b\"".to_string());
 
-    assert_eq!(generate_regex(0, &test_map), "aaa|bbab|ba|ab|baaa|bb");
+    let mut count = HashMap::new();
+    count.insert(0, 5);
+    count.insert(1, 5);
+    count.insert(2, 5);
+    count.insert(3, 5);
+    count.insert(4, 5);
+    count.insert(5, 5);
+
+    assert_eq!(
+        generate_regex(0, &test_map, &count),
+        "a((aa|bb)(ab|ba)|(ab|ba)(aa|bb))"
+    );
 }
