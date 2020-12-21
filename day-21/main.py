@@ -38,3 +38,40 @@ for item in all_ingredients:
             count += 1
 
 print(count)
+
+print("Part 2")
+# Part 2
+final_mapping = {}
+
+while True:
+    for (allergens, ingredients) in allergens_to_ingredients.items():
+        if len(ingredients) == 1:
+            ingredient = ingredients.pop()
+
+            print(f"Found {allergens} is {ingredient}")
+            final_mapping[allergens] = ingredient
+
+            for other_ingredients in allergens_to_ingredients.values():
+                if ingredient in other_ingredients:
+                    other_ingredients.remove(ingredient)
+
+            break
+
+            # del allergens_to_ingredients[a]
+    print(allergens_to_ingredients)
+    if not any(allergens_to_ingredients.values()):
+        break
+
+print("Final mapping:", final_mapping)
+
+from operator import itemgetter
+
+print(
+    "Answerp part 2",
+    ",".join(
+        [
+            pair[1]
+            for pair in sorted(list(final_mapping.items()), key=itemgetter(0))
+        ]
+    ),
+)
