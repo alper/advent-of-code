@@ -75,3 +75,8 @@ corners = ["2749", "2713", "1487", "1063"]
 
 im = np.chararray((12 * 10, 12 * 10))
 im[:] = "."
+
+# If I want to go on with part2
+
+# https://github.com/Jozkings/advent-of-code-2020/blob/main/20.py
+# https://www.reddit.com/r/adventofcode/comments/kgo01p/2020_day_20_solutions/
