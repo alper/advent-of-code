@@ -79,11 +79,9 @@ def part2():
             print(f"Card player 2: {card2}")
 
             if len(deck1) >= card1 and len(deck2) >= card2:
-                rec_result = play_recursive(deck1[:], deck2[:], level + 1)
-                if rec_result[0]:
-                    winner = 0
-                else:
-                    winner = 1
+                winner, wdeck1, wdeck2 = play_recursive(
+                    deck1[:], deck2[:], level + 1
+                )
             else:
                 print("Playing non recursive")
                 if card1 > card2:
@@ -108,22 +106,16 @@ def part2():
         print(f"Decks: {deck1} x {deck2}")
         print(f"------------ End recursive game {level}")
 
-        return (deck1, deck2)
+        return (winner, deck1, deck2)
 
-    result_decks = play_recursive(players[0][:], players[1][:])
-
-    winner = 0
-    if result_decks[0]:
-        winner = 0
-    else:
-        winner = 1
+    winner, wdeck1, wdeck2 = play_recursive(players[0][:], players[1][:])
 
     score = sum(
         map(
             lambda ic: ic[0] * ic[1],
             zip(
-                range(1, len(result_decks[winner]) + 1),
-                reversed(result_decks[winner]),
+                range(1, len(wdeck1 or wdeck2) + 1),
+                reversed(wdeck1 or wdeck2),
             ),
         )
     )
