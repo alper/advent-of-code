@@ -1,5 +1,7 @@
+from itertools import islice
+
 puzzle_input = open("test_input.txt").read()
-# puzzle_input = open("input.txt").read()
+puzzle_input = open("input.txt").read()
 
 
 def part1():
@@ -57,20 +59,21 @@ def part2():
         print(f"Playing recursive game {level}")
         print(f"Decks: {deck1} x {deck2}")
 
-        player1_states = []
-        player2_states = []
+        player1_states = set()
+        player2_states = set()
 
         rounds = 1
         while deck1 and deck2:
             print(f"Round {rounds}")
 
-            # Check if deck in previous state
-            # if deck1 in player1_states or deck2 in player2_states:
-            #     print(f"States {player1_states} x {player2_states}")
-            #     return (deck1, [])
-            # else:
-            #     player1_states.append(deck1)
-            #     player2_states.append(deck2)
+            if (
+                tuple(deck1) in player1_states
+                and tuple(deck2) in player2_states
+            ):
+                print(f"Player 1 wins by default for {deck1} x {deck2}")
+                return 0, deck1, deck2
+            player1_states.add(tuple(deck1))
+            player2_states.add(tuple(deck2))
 
             card1 = deck1.pop(0)
             card2 = deck2.pop(0)
@@ -80,7 +83,9 @@ def part2():
 
             if len(deck1) >= card1 and len(deck2) >= card2:
                 winner, wdeck1, wdeck2 = play_recursive(
-                    deck1[:], deck2[:], level + 1
+                    list(islice(deck1[:], 0, card1)),
+                    list(islice(deck2[:], 0, card2)),
+                    level + 1,
                 )
             else:
                 print("Playing non recursive")
