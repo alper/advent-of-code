@@ -9,13 +9,27 @@ fn main() {
 
     // println!("{:?}", depth_measurements);
 
-    let simple_differences: Vec<i32> = depth_measurements.iter().tuple_windows().map(|(a, b)| (b - a)).filter(|a| *a > 0).collect();
+    let simple_differences: Vec<i32> = depth_measurements
+        .iter()
+        .tuple_windows()
+        .map(|(a, b)| (b - a))
+        .filter(|a| *a > 0)
+        .collect();
 
     println!("Answer to part 1: {:?}", simple_differences.len());
 
     // Part 2
-    let measurement_triplets: Vec<(&i32, &i32, &i32)> = depth_measurements.iter().tuple_windows().collect();
-    let triplet_differences: Vec<i32> = measurement_triplets.iter().map(|(a, b, c)| *a + *b + *c).tuple_windows().map(|(a, b)| (b-a)).filter(|a| *a > 0).collect();
+    let measurement_triplets: Vec<(&i32, &i32, &i32)> = depth_measurements
+        .iter()
+        .tuple_windows()
+        .collect();
+
+    let triplet_differences: Vec<(i32, i32)> = measurement_triplets
+        .iter()
+        .map(|&(a, b, c)| a + b + c)
+        .tuple_windows()
+        .filter(|(a, b)| b > a)
+        .collect();
 
     println!("Answer to part 2: {:?}", triplet_differences.len());
 }
