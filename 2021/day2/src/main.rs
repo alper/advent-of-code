@@ -1,5 +1,4 @@
 use std::fs;
-use itertools::Itertools;
 
 fn main() {
     let input = fs::read_to_string("input.txt").expect("File not readable");
@@ -16,41 +15,29 @@ fn main() {
 
     let down_movements: Vec<i32> = movements
         .iter()
-        .map(|m| {
-            match m[0] {
-                "down" => m[1].parse::<i32>().unwrap(),
-                "up" => -(m[1].parse::<i32>().unwrap()),
-                _ => 0
-            }
-        }).collect();
+        .map(|m| match m[0] {
+            "down" => m[1].parse::<i32>().unwrap(),
+            "up" => -(m[1].parse::<i32>().unwrap()),
+            _ => 0,
+        })
+        .collect();
 
     let down_delta = down_movements.iter().sum::<i32>();
 
     println!("Answer part 1: {:?}", forward_delta * down_delta);
 
-    let mut down: i32 = 0;
-    let mut aim: i32 = 0;
-    let mut forward: i32 = 0;
-
-    for mov in movements {
-        let dir = mov[0];
+    // tuple: (down, aim, forward)
+    let result = movements.iter().fold((0, 0, 0), |t, mov| {
         let amount = mov[1].parse::<i32>().unwrap();
 
-        match dir {
-            "down" => {
-                aim += amount;
-            },
-            "up" => {
-                aim -= amount;
-            },
-            "forward" => {
-                forward += amount;
-                down += aim * amount;
-            },
-            _ => {}
-        };
-    }
+        match mov[0] {
+            "down" => (t.0, t.1 + amount, t.2),
+            "up" => (t.0, t.1 - amount, t.2),
+            "forward" => (t.0 + (t.1 * amount), t.1, t.2 + amount),
+            _ => t,
+        }
+    });
 
-    println!("Forward: {}, Down: {}", forward, down);
-    println!("Answer 2: {}", forward * down);
+    println!("Forward: {}, Down: {}", result.2, result.0);
+    println!("Answer 2: {}", result.2 * result.0);
 }
