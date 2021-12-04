@@ -123,18 +123,19 @@ fn main() {
 
     let mut boards: Vec<BingoBoard> = input_parts.map(|p| board_input_to_grid(p)).collect();
 
-    'outer: for n in numbers {
+    for n in numbers {
         for b in &mut boards {
-            mark_number_on_board(b, n);
+            let already_won = board_score(b) > 0;
 
-            let score = board_score(b);
-            if score > 0 {
-                println!("Answer: {}", score * n);
-                break 'outer;
+            if !already_won {
+                mark_number_on_board(b, n);
+                let score = board_score(b);
+                if score > 0 {
+                    println!("Answer: {}", score * n);
+                }
             }
         }
     }
-
 
     println!("V: {:?}", boards);
 }
