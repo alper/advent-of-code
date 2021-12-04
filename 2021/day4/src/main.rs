@@ -107,9 +107,9 @@ fn board_score(b: &BingoBoard) -> usize {
     if won {
         let els: Vec<usize> = b.iter().filter(|be| !be.marked).map(|be| be.board_value).collect();
 
-        return els.iter().sum();
+        els.iter().sum()
     } else {
-        return 0;
+        0
     }
 }
 
@@ -117,7 +117,7 @@ fn main() {
     let input = fs::read_to_string("input.txt").expect("File not readable");
     let mut input_parts = input.split("\n\n");
 
-    let numbers: Vec<usize> = input_parts.next().unwrap().split(",").map(|p| p.parse::<usize>().unwrap()).collect();
+    let numbers: Vec<usize> = input_parts.next().unwrap().split(',').map(|p| p.parse::<usize>().unwrap()).collect();
 
     println!("Numbers: {:?}", numbers);
 
