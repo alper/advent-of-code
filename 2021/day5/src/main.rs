@@ -1,4 +1,5 @@
-use std::{fs, cmp};
+use std::fs;
+use std::cmp::{min, max};
 use itertools::{Itertools};
 use ndarray::{Array2, s};
 
@@ -27,13 +28,13 @@ fn main() {
         println!("{:?} -> {:?}", start, end);
 
         if start.0 == end.0 {
-            for i in cmp::min(start.1, end.1)..=cmp::max(start.1, end.1) {
+            for i in min(start.1, end.1)..=max(start.1, end.1) {
                 a[[i, start.0]] += 1;
             }
         }
 
         if start.1 == end.1 {
-            for j in cmp::min(start.0, end.0)..=cmp::max(start.0, end.0) {
+            for j in min(start.0, end.0)..=max(start.0, end.0) {
                 a[[start.1, j]] += 1;
             }
         }
