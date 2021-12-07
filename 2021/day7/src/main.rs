@@ -18,13 +18,14 @@ fn main() {
 
     println!("Answer 1: {}", s_deltas.iter().min().unwrap());
 
-    // let s_deltas2: Vec<isize> = (min..=max)
-    //     .map(|l| {
-    //         x_pos
-    //             .iter()
-    //             .map(|x| (0..(x-(l as isize)).abs()).sum())
-    //             .collect()
-    //     })
-    //     .collect();
-    // println!("S Deltas2: {:?}", s_deltas2);
+    println!("Debug: {:?}", (0..(10-20_isize).abs()).sum::<isize>());
+
+    let s_deltas2: Vec<isize> = (min..=max)
+        .map(|l| {
+            x_pos
+                .iter()
+                .map(|x| (1..=(x-(l as isize)).abs()).sum::<isize>()).sum()
+        })
+        .collect();
+    println!("Answer 2: {:?}", s_deltas2.iter().min().unwrap());
 }
