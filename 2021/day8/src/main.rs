@@ -19,7 +19,18 @@ fn main() {
 
     // Part 2
 
-    let mut h = parse_frequencies("acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab");
+
+
+}
+
+#[test]
+fn test_get_wiring() {
+    assert_eq!(get_wiring("acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab"), ['d', 'e', 'a', 'f', 'g', 'b', 'c']);
+
+}
+
+fn get_wiring(groups: &str) -> [char; 7] {
+    let mut h = parse_frequencies(groups);
 
     let four_vec = h.remove(&4).unwrap();
     let four = four_vec.first().unwrap();
@@ -90,6 +101,8 @@ fn main() {
     let f = one.iter().filter(|&w| w != c).next().unwrap();
 
     println!("{} {} {} {} {} {} {}", a, b, c, d, e, f, g);
+
+    return [*a, *b, *c, *d, *e, *f, *g];
 }
 
 #[test]
