@@ -3,7 +3,7 @@ use itertools::{Itertools};
 use array2d::Array2D;
 
 fn main() {
-    let input = fs::read_to_string("test_input.txt").expect("File not readable");
+    let input = fs::read_to_string("input.txt").expect("File not readable");
 
     let parsed = input
         .lines()
@@ -14,7 +14,7 @@ fn main() {
 
     println!("Input: {:?}", parsed);
 
-    let a = Array2D::from_rows(&parsed);
+    let mut a = Array2D::from_rows(&parsed);
 
     println!("Array: {:?}", a);
     for row in a.as_rows() {
@@ -75,6 +75,12 @@ fn main() {
 
     // Part 2
 
+    let sizes: Vec<_> = low_points.iter().map(|p| basin_size_rec(*p, &mut a)).sorted().rev().collect();
+
+    println!("Sizes: {:?}", sizes);
+
+    println!("Answer 2: {}", sizes[0] * sizes[1] * sizes[2]);
+
 }
 
 fn basin_size(point: (usize, usize), arr: &mut Array2D<isize>) -> usize {
@@ -97,8 +103,8 @@ fn test_basin_size_rec() {
 }
 
 fn basin_size_rec(point: (usize, usize), arr: &mut Array2D<isize>) -> usize {
-    println!("Got arr: {:?}", arr);
-    println!("Got point: {:?}", point);
+    // println!("Got arr: {:?}", arr);
+    // println!("Got point: {:?}", point);
 
     if let Some(p) = arr.get_mut(point.0, point.1) {
         if *p == 9 || *p == -1 {
