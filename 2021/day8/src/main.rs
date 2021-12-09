@@ -19,7 +19,7 @@ fn main() {
 
     // Part 2
 
-    let pairs = input.lines().map(|l| (l.split('|').nth(0).unwrap().trim(), l.split('|').nth(1).unwrap().trim())).collect::<Vec<_>>();
+    let pairs = input.lines().map(|l| (l.split('|').next().unwrap().trim(), l.split('|').nth(1).unwrap().trim())).collect::<Vec<_>>();
 
     let mut sum_of_digits = 0;
 
@@ -67,17 +67,17 @@ fn get_wiring(groups: &str) -> [HashSet<char>; 10] {
 
     // Get the six
     let six_segs_3 = h.remove(&6).unwrap();
-    let six_vec: Vec<_> = six_segs_3.iter().cloned().filter(|s| s.intersection(&one).count() == 1).collect();
+    let six_vec: Vec<_> = six_segs_3.iter().cloned().filter(|s| s.intersection(one).count() == 1).collect();
     let six = six_vec.first().unwrap();
 
     // println!("Six: {:?}", six);
 
     // Remove the six
-    let six_segs_2: Vec<_> = six_segs_3.iter().cloned().filter(|s| s.intersection(&one).count() != 1).collect();
+    let six_segs_2: Vec<_> = six_segs_3.iter().cloned().filter(|s| s.intersection(one).count() != 1).collect();
 
     // Get the three
     let five_segs_3 = h.remove(&5).unwrap();
-    let three_vec: Vec<_> = five_segs_3.iter().cloned().filter(|s| s.is_superset(&one)).collect();
+    let three_vec: Vec<_> = five_segs_3.iter().cloned().filter(|s| s.is_superset(one)).collect();
     let three = three_vec.first().unwrap();
 
     // println!("Three: {:?}", three);
@@ -99,7 +99,7 @@ fn get_wiring(groups: &str) -> [HashSet<char>; 10] {
     // println!("Two: {:?}", two);
 
     // Get the nine
-    let nine_vec: Vec<_> = six_segs_2.iter().cloned().filter(|s| s.is_superset(&four)).collect();
+    let nine_vec: Vec<_> = six_segs_2.iter().cloned().filter(|s| s.is_superset(four)).collect();
     let nine = nine_vec.first().unwrap();
 
     // println!("Nine: {:?}", nine);
@@ -112,14 +112,14 @@ fn get_wiring(groups: &str) -> [HashSet<char>; 10] {
     let d = eight.difference(zero).next().unwrap();
     let c = eight.difference(six).next().unwrap();
     let e = eight.difference(nine).next().unwrap();
-    let b = nine.difference(&three).next().unwrap();
-    let a = seven.difference(&one).next().unwrap();
-    let g = zero.difference(&seven).filter(|&w| w != b && w != e).next().unwrap();
-    let f = one.iter().filter(|&w| w != c).next().unwrap();
+    let b = nine.difference(three).next().unwrap();
+    let a = seven.difference(one).next().unwrap();
+    let g = zero.difference(seven).find(|&w| w != b && w != e).unwrap();
+    let f = one.iter().find(|&w| w != c).unwrap();
 
     println!("{} {} {} {} {} {} {}", a, b, c, d, e, f, g);
 
-    return [zero.clone(),
+    [zero.clone(),
         one.clone(),
         two.clone(),
         three.clone(),
@@ -128,7 +128,7 @@ fn get_wiring(groups: &str) -> [HashSet<char>; 10] {
         six.clone(),
         seven.clone(),
         eight.clone(),
-        nine.clone()];
+        nine.clone()]
 }
 
 #[test]
@@ -150,7 +150,7 @@ fn decode_digit(garbled: &str, wiring: &[HashSet<char>; 10]) -> usize {
         }
     }
 
-    return 10;
+    10
 }
 
 #[test]
