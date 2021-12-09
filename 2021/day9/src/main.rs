@@ -3,7 +3,7 @@ use itertools::{Itertools};
 use array2d::Array2D;
 
 fn main() {
-    let input = fs::read_to_string("input.txt").expect("File not readable");
+    let input = fs::read_to_string("test_input.txt").expect("File not readable");
 
     let parsed = input
         .lines()
@@ -16,8 +16,13 @@ fn main() {
 
     let a = Array2D::from_rows(&parsed);
 
+    println!("Array: {:?}", a);
+    for row in a.as_rows() {
+        println!("{:?}", row);
+    }
 
-    let mut low_points: Vec<isize> = vec![];
+
+    let mut low_points: Vec<(usize, usize)> = vec![];
 
     for i in 0..a.num_rows() {
         for j in 0..a.num_columns() {
@@ -59,10 +64,19 @@ fn main() {
 
             if !lower {
                 println!("Lowest: {} at ({}, {})", val, i, j);
-                low_points.push(*val);
+                low_points.push((i, j));
             }
         }
     }
 
-    println!("Answer 1: {}", low_points.iter().map(|p| p+1).sum::<isize>());
+    println!("Low points: {:?}", low_points);
+
+    println!("Answer 1: {}", low_points.iter().map(|(i, j)| a.get(*i, *j).unwrap()+1).sum::<isize>());
+
+    // Part 2
+
+}
+
+fn basin_size(point: (usize, usize), arr: Array2D) {
+
 }
