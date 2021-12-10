@@ -25,6 +25,10 @@ fn test_balanced() {
     assert_eq!(balanced("(())"), true);
     assert_eq!(balanced("((}"), false);
 
+    assert_eq!(balanced("([])"), true);
+    assert_eq!(balanced("{()()()}"), true);
+    assert_eq!(balanced("<([{}])>"), true);
+    assert_eq!(balanced("[<>({}){}[([])<>]]"), true);
     assert_eq!(balanced("(((((((((())))))))))"), true);
 }
 
@@ -32,11 +36,16 @@ fn balanced(series: &str) -> bool {
     let mut stack = vec![];
 
     for c in series.chars() {
-        if c == '(' {
+        if c == '(' || c == '[' || c == '{' || c == '<' {
             stack.push(c);
-        } else if c == ')' {
-            if let Some(d) = stack.pop() {
-                if d != '(' {
+        } else if c == ')' || c == ']' || c == '}' || c == '>' {
+            if let Some(b) = stack.pop() {
+                if (c == ')' && b == '(') ||
+                (c == ']' && b == '[') ||
+                (c == '}' && b == '{') ||
+                (c == '>' && b == '<') {
+                    // pass
+                } else {
                     return false;
                 }
             } else {
