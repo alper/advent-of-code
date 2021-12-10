@@ -20,19 +20,25 @@ fn main() {
 
 #[test]
 fn test_balanced() {
-    assert_eq!(balanced("()"), true);
-    assert_eq!(balanced("(("), false);
-    assert_eq!(balanced("(())"), true);
-    assert_eq!(balanced("((}"), false);
+    assert_eq!(corrupted("()"), ' ');
+    assert_eq!(corrupted("(("), ' ');
+    assert_eq!(corrupted("(())"), ' ');
+    assert_eq!(corrupted("((}"), '}');
 
-    assert_eq!(balanced("([])"), true);
-    assert_eq!(balanced("{()()()}"), true);
-    assert_eq!(balanced("<([{}])>"), true);
-    assert_eq!(balanced("[<>({}){}[([])<>]]"), true);
-    assert_eq!(balanced("(((((((((())))))))))"), true);
+    assert_eq!(corrupted("([])"), ' ');
+    assert_eq!(corrupted("{()()()}"), ' ');
+    assert_eq!(corrupted("<([{}])>"), ' ');
+    assert_eq!(corrupted("[<>({}){}[([])<>]]"), ' ');
+    assert_eq!(corrupted("(((((((((())))))))))"), ' ');
+
+    assert_eq!(corrupted("(]"), ']');
+    assert_eq!(corrupted("{()()()>"), '>');
+    assert_eq!(corrupted("(((()))}"), '}');
+    assert_eq!(corrupted("<([]){()}[{}])"), ')');
+
 }
 
-fn balanced(series: &str) -> bool {
+fn corrupted(series: &str) -> char {
     let mut stack = vec![];
 
     for c in series.chars() {
@@ -46,17 +52,10 @@ fn balanced(series: &str) -> bool {
                 (c == '>' && b == '<') {
                     // pass
                 } else {
-                    return false;
+                    return c;
                 }
-            } else {
-                return false;
             }
         }
     }
-
-    if stack.len() != 0 {
-        return false;
-    }
-
-    return true;
+    return ' ';
 }
