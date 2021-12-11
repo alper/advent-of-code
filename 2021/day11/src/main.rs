@@ -21,12 +21,6 @@ impl Default for Octopus {
 impl fmt::Debug for Octopus {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.energy_level)
-
-        // if !self.marked {
-        //     write!(f, "{}", self.board_value)
-        // } else {
-        //     write!(f, "*{}*", self.board_value)
-        // }
     }
 }
 
@@ -61,7 +55,7 @@ fn main() {
 
         // Check grid
         if g.iter().all(|o| o.energy_level == 0) {
-            println!("Flashed at step: {}", steps);
+            println!("Answer 2: {}", steps);
 
             break;
         }
@@ -80,19 +74,16 @@ fn step_octopuses(g: &mut OctopusGrid) -> usize {
 
     // Process flashes
     loop {
-        println!("Loop");
-
         let mut local_flash_count = 0;
 
         for i in 0..g.rows() {
             for j in 0..g.cols() {
                 let mut o = g.get_mut(i, j).unwrap();
 
-                // println!("Octo energ: {}", o.energy_level);
-
                 if o.energy_level > 9 && !o.flashed {
                     // Flash
                     o.flashed = true;
+                    local_flash_count += 1;
 
                     // Increment the neighbors
                     let neighbors = get_8_neighbors(i, j, g.rows(), g.cols());
@@ -101,8 +92,6 @@ fn step_octopuses(g: &mut OctopusGrid) -> usize {
                         let mut octo_neighbor = g.get_mut(n.0, n.1).unwrap();
                         octo_neighbor.energy_level += 1;
                     }
-
-                    local_flash_count += 1;
                 }
             }
         }
