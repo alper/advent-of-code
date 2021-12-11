@@ -3,6 +3,7 @@ use itertools::{Itertools};
 use grid::*;
 use std::fmt;
 
+#[derive(Clone, Copy)]
 struct Octopus {
     energy_level: usize,
     flashed: bool,
@@ -41,7 +42,7 @@ fn main() {
         .map(|d| Octopus{ energy_level: d, flashed: false})
         .collect();
 
-    let mut g: OctopusGrid = Grid::from_vec(a, 10);
+    let mut g: OctopusGrid = Grid::from_vec(a.clone(), 10);
 
     println!("Input: {:?}", g);
 
@@ -50,7 +51,23 @@ fn main() {
         flashes += step_octopuses(&mut g);
     }
 
-    println!("Flashes: {:?}", flashes);
+    println!("Answer 1: {:?}", flashes);
+
+    // Part 2
+    let mut g: OctopusGrid = Grid::from_vec(a, 10);
+    let mut steps = 1;
+    loop {
+        step_octopuses(&mut g);
+
+        // Check grid
+        if g.iter().all(|o| o.energy_level == 0) {
+            println!("Flashed at step: {}", steps);
+
+            break;
+        }
+
+        steps += 1;
+    }
 }
 
 fn step_octopuses(g: &mut OctopusGrid) -> usize {
@@ -78,7 +95,7 @@ fn step_octopuses(g: &mut OctopusGrid) -> usize {
                     o.flashed = true;
 
                     // Increment the neighbors
-                    let neighbors = get_neighbors(i, j, g.rows(), g.cols());
+                    let neighbors = get_8_neighbors(i, j, g.rows(), g.cols());
                     for n in neighbors {
                         // println!("N: {:?}", n);
                         let mut octo_neighbor = g.get_mut(n.0, n.1).unwrap();
@@ -114,13 +131,13 @@ fn test_get_neighbors() {
     // 3 4 5
     // 6 7 8
 
-    assert_eq!(get_neighbors(0, 0, 3, 3), vec![(0, 1), (1, 0), (1, 1)]);
-    assert_eq!(get_neighbors(1, 0, 3, 3), vec![(0, 0), (0, 1), (1, 1), (2, 0), (2, 1)]);
-    assert_eq!(get_neighbors(2, 2, 3, 3), vec![(1, 1), (1, 2), (2, 1)]);
-    assert_eq!(get_neighbors(1, 1, 3, 3), vec![(0, 0), (0, 1), (0, 2), (1, 0), (1, 2), (2, 0), (2, 1), (2, 2)]);
+    assert_eq!(get_8_neighbors(0, 0, 3, 3), vec![(0, 1), (1, 0), (1, 1)]);
+    assert_eq!(get_8_neighbors(1, 0, 3, 3), vec![(0, 0), (0, 1), (1, 1), (2, 0), (2, 1)]);
+    assert_eq!(get_8_neighbors(2, 2, 3, 3), vec![(1, 1), (1, 2), (2, 1)]);
+    assert_eq!(get_8_neighbors(1, 1, 3, 3), vec![(0, 0), (0, 1), (0, 2), (1, 0), (1, 2), (2, 0), (2, 1), (2, 2)]);
 }
 
-fn get_neighbors(r: usize, c: usize, rows: usize, cols: usize) -> Vec<(usize, usize)> {
+fn get_8_neighbors(r: usize, c: usize, rows: usize, cols: usize) -> Vec<(usize, usize)> {
     let mut v = vec![];
 
     if r > 0 && c > 0 { // NW
