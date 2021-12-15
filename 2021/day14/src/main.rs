@@ -1,68 +1,83 @@
 use itertools::Itertools;
 use std::collections::HashMap;
 use std::fs;
+use std::slice::SliceIndex;
 
 fn main() {
     let input = fs::read_to_string("input.txt").expect("File not readable");
 
-    let mut template: Vec<char> = vec![];
+    let mut pair_freqs: HashMap<[char; 2], usize> = HashMap::new();
+    let mut first_char = ' ';
+    let mut last_char = ' ';
 
-    let mut rules: HashMap<String, char> = HashMap::new();
+    let mut rules: HashMap<[char; 2], char> = HashMap::new();
 
     for line in input.lines() {
         if !line.contains('>') {
             if !line.trim().is_empty() {
-                template = line.trim().chars().collect();
+                for pair in line.trim().chars().tuple_windows::<(_, _)>() {
+                    let e = pair_freqs.entry([pair.0, pair.1]).or_insert(0);
+
+                    *e += 1;
+                }
+
+                // Get first and last
+                first_char = line.chars().next().unwrap();
+                last_char = line.chars().last().unwrap();
             }
         } else {
             let mut parts = line.split(" -> ");
-            let left = parts.next().unwrap().to_string();
+            let left_couple = parts.next().unwrap();
+            let left = [
+                left_couple.chars().next().unwrap(),
+                left_couple.chars().nth(1).unwrap(),
+            ];
             let right = parts.next().unwrap().chars().next().unwrap();
 
             rules.insert(left, right);
         }
     }
 
-    println!("Template: {:?}", template);
+    println!("Template: {:?}", pair_freqs);
+
+    println!("Rules: {:?}", rules);
 
     for i in 0..40 {
-        println!("Run {}", i);
+        println!("Run: {}", i);
+        let mut new_freqs: HashMap<[char; 2], usize> = HashMap::new();
 
-        let mut temp_vec: Vec<char> = vec![];
+        for (pair, f) in &pair_freqs {
+            let gen = rules.get(pair).unwrap();
 
-        for c in template.windows(2) {
-            // println!("{:?}", c);
+            let e1 = new_freqs.entry([pair[0], *gen]).or_insert(0);
+            *e1 += *f;
 
-            let doublet = String::from_iter(c);
-            let insertee = rules.get(&doublet).unwrap();
-            // println!("Intermediary: {}", insertee);
-
-            temp_vec.push(c[0]);
-            temp_vec.push(*insertee);
+            let e2 = new_freqs.entry([*gen, pair[1]]).or_insert(0);
+            *e2 += *f;
         }
 
-        temp_vec.push(*template.iter().last().unwrap());
-
-        template = temp_vec;
-
-        // println!("Template: {:?}", template);
+        pair_freqs = new_freqs;
+        println!("New freqs: {:?}", pair_freqs);
     }
 
-    let counts: Vec<usize> = template
-        .iter()
-        .unique()
-        .map(|l| template.iter().filter(|c| *c == l).count())
-        .collect();
+    let mut counts: HashMap<char, usize> = HashMap::new();
 
-    println!("Counts: {:?}", counts);
+    for (pair, f) in &pair_freqs {
+        let c1 = counts.entry(pair[0]).or_insert(0);
+        *c1 += *f;
 
-    println!(
-        "Answer 1: {}",
-        counts.iter().max().unwrap() - counts.iter().min().unwrap()
-    );
+        let c2 = counts.entry(pair[1]).or_insert(0);
+        *c2 += *f;
+    }
 
-    // template.chars().collect::<Vec<char>>().windows(2)
+    // Correct the counts
+    *counts.get_mut(&first_char).unwrap() += 2;
+    *counts.get_mut(&last_char).unwrap() += 2;
 
-    // println!("Template: {:?}", template);
-    // println!("Rules: {:?}", rules);
+    // for (c, f) in &counts {
+    //     println!("{} x {}", c, f / 2);
+    // }
+
+    let answer = (counts.values().max().unwrap() / 2) - (counts.values().min().unwrap() / 2);
+    println!("Answer = {}", answer);
 }
