@@ -1,7 +1,5 @@
 use grid::*;
-use itertools::Itertools;
 use std::cmp::min;
-use std::collections::BinaryHeap;
 use std::fmt::Debug;
 use std::fmt::Formatter;
 use std::fmt::Result;
@@ -95,7 +93,7 @@ fn find_node(grid: &Grid<Node>) -> Option<(usize, usize)> {
 
     // println!("Node found: {:?}", min_coord);
 
-    return min_coord;
+    min_coord
 }
 
 fn process_node(coord: (usize, usize), grid: &mut Grid<Node>) {

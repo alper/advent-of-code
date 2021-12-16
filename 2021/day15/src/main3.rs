@@ -1,11 +1,5 @@
 use grid::*;
-use itertools::Itertools;
 use pathfinding::prelude::dijkstra;
-use std::cmp::min;
-use std::collections::BinaryHeap;
-use std::fmt::Debug;
-use std::fmt::Formatter;
-use std::fmt::Result;
 use std::fs;
 
 #[derive(Clone, Copy, Eq, PartialEq)]
@@ -78,7 +72,7 @@ fn render_grid(grid: &Grid<Node>) {
 
             print!("{} ", n.cost);
         }
-        print!("\n");
+        println!();
     }
 }
 
@@ -128,5 +122,5 @@ fn neighbors(coord: (usize, usize), grid: &Grid<Node>) -> Vec<((usize, usize), u
 
     // println!("Return: {:?}", res);
 
-    return res;
+    res
 }
