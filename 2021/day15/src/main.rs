@@ -1,12 +1,13 @@
 use grid::*;
 use itertools::Itertools;
 use std::cmp::min;
+use std::collections::BinaryHeap;
 use std::fmt::Debug;
 use std::fmt::Formatter;
 use std::fmt::Result;
 use std::fs;
 
-#[derive(Clone)]
+#[derive(Clone, Copy, Eq, PartialEq)]
 struct Node {
     visited: bool,
     cost: u32,
@@ -15,7 +16,22 @@ struct Node {
 
 impl Debug for Node {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        write!(f, "{}", self.cumulative_cost)
+        write!(f, "{}", self.cost)
+    }
+}
+
+impl Ord for Node {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        other
+            .cumulative_cost
+            .cmp(&self.cumulative_cost)
+            .then_with(|| self.cost.cmp(&other.cost))
+    }
+}
+
+impl PartialOrd for Node {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
     }
 }
 
