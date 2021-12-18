@@ -27,6 +27,7 @@ fn sum_packet_version(p: &Packet) -> usize {
     match p {
         Packet::Operator {
             version,
+            operator_type,
             subpackets,
         } => {
             let sub_packet_version_sum: usize =
@@ -41,6 +42,7 @@ fn sum_packet_version(p: &Packet) -> usize {
 enum Packet {
     Operator {
         version: usize,
+        operator_type: PacketType,
         subpackets: Vec<Packet>,
     },
     Literal {
@@ -128,20 +130,31 @@ fn packet_version(input: &str) -> IResult<&str, usize> {
 #[derive(Debug)]
 enum PacketType {
     Literal,
-    Operator,
+    OperatorSum,
+    OperatorProduct,
+    OperatorMinimum,
+    OperatorMaximum,
+    OperatorGreaterThan,
+    OperatorLessThan,
+    OperatorEqualTo,
 }
 
 fn packet_type(input: &str) -> IResult<&str, PacketType> {
     let (input, t) = count(one_of("01"), 3)(input)?;
 
-    Ok((
-        input,
-        if t.iter().join("") == "100" {
-            PacketType::Literal
-        } else {
-            PacketType::Operator
-        },
-    ))
+    let packet_type_id = usize::from_str_radix(&t.iter().join(""), 2).unwrap();
+    let packet_type = match packet_type_id {
+        0 => PacketType::OperatorSum,
+        1 => PacketType::OperatorProduct,
+        2 => PacketType::OperatorMinimum,
+        3 => PacketType::OperatorMaximum,
+        5 => PacketType::OperatorGreaterThan,
+        6 => PacketType::OperatorLessThan,
+        7 => PacketType::OperatorEqualTo,
+        _ => PacketType::Literal,
+    };
+
+    Ok((input, packet_type))
 }
 
 #[derive(Debug)]
@@ -192,6 +205,7 @@ fn operator_packet(input: &str) -> IResult<&str, Packet> {
             rest_to_parse,
             Packet::Operator {
                 version: packet_version,
+                operator_type: p_type,
                 subpackets: subpackets,
             },
         ));
@@ -202,14 +216,18 @@ fn operator_packet(input: &str) -> IResult<&str, Packet> {
             input,
             Packet::Operator {
                 version: packet_version,
+                operator_type: p_type,
                 subpackets: subpackets,
             },
         ));
     } else {
+        // Fall back case, should not be uside
+        unimplemented!();
         return Ok((
             input,
             Packet::Operator {
                 version: 0,
+                operator_type: p_type,
                 subpackets: vec![],
             },
         ));
