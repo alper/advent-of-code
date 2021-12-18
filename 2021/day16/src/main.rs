@@ -5,7 +5,6 @@ use nom::branch::alt;
 use nom::bytes::complete::tag;
 use nom::character::complete::one_of;
 use nom::combinator::map;
-use nom::combinator::map_res;
 use nom::multi::count;
 use nom::multi::many0;
 use nom::sequence::preceded;
@@ -42,9 +41,33 @@ fn sum_packet_version(p: &Packet) -> usize {
     }
 }
 
+#[test]
+fn test_calculate_packet_value() {
+    assert_eq!(calculate_packet_value(&hex_to_packet(&"C200B40A82")), 3);
+    assert_eq!(calculate_packet_value(&hex_to_packet(&"04005AC33890")), 54);
+    assert_eq!(calculate_packet_value(&hex_to_packet(&"880086C3E88112")), 7);
+    assert_eq!(calculate_packet_value(&hex_to_packet(&"CE00C43D881120")), 9);
+    assert_eq!(calculate_packet_value(&hex_to_packet(&"D8005AC2A8F0")), 1);
+    assert_eq!(calculate_packet_value(&hex_to_packet(&"F600BC2D8F")), 0);
+    assert_eq!(calculate_packet_value(&hex_to_packet(&"9C005AC2F8F0")), 0);
+    assert_eq!(
+        calculate_packet_value(&hex_to_packet(&"9C0141080250320F1802104A08")),
+        1
+    );
+}
+
+fn hex_to_packet(i: &str) -> Packet {
+    let bin = hex_to_bin(i);
+    let p = parse_packet(&bin);
+
+    return p.unwrap().1;
+}
+
 fn calculate_packet_value(p: &Packet) -> usize {
+    println!("Calculating for packet: {:?}", p);
+
     match p {
-        Packet::Literal { version, value } => *version,
+        Packet::Literal { version, value } => *value,
         Packet::Operator {
             version,
             operator_type,
@@ -114,10 +137,10 @@ fn test_parse() {
     //     parse_packet(&hex_to_bin("8A004A801A8002F478"))
     // );
 
-    println!(
-        "620080001611562C8802118E34 {:?}",
-        parse_packet(&hex_to_bin("620080001611562C8802118E34"))
-    );
+    // println!(
+    //     "620080001611562C8802118E34 {:?}",
+    //     parse_packet(&hex_to_bin("620080001611562C8802118E34"))
+    // );
 
     // println!(
     //     "C0015000016115A2E0802F182340 {:?}",
@@ -147,7 +170,7 @@ fn test_parse() {
     //     parse_packet(&hex_to_bin("EE00D40C823060"))
     // );
 
-    assert_eq!(1, 2);
+    // assert_eq!(1, 2);
 }
 
 fn parse_packet(input: &str) -> IResult<&str, Packet> {
