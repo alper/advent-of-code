@@ -20,7 +20,11 @@ fn main() {
 
     println!("Packets: {:?}", p);
 
-    println!("Answer 1: {}", sum_packet_version(&p.unwrap().1));
+    let packet = p.unwrap().1;
+
+    println!("Answer 1: {}", sum_packet_version(&packet));
+
+    println!("Answer 2: {}", calculate_packet_value(&packet));
 }
 
 fn sum_packet_version(p: &Packet) -> usize {
@@ -38,7 +42,57 @@ fn sum_packet_version(p: &Packet) -> usize {
     }
 }
 
-#[derive(Debug)]
+fn calculate_packet_value(p: &Packet) -> usize {
+    match p {
+        Packet::Literal { version, value } => *version,
+        Packet::Operator {
+            version,
+            operator_type,
+            subpackets,
+        } => match operator_type {
+            PacketType::OperatorSum => subpackets.iter().map(|p| calculate_packet_value(p)).sum(),
+            PacketType::OperatorProduct => subpackets
+                .iter()
+                .map(|p| calculate_packet_value(p))
+                .product(),
+            PacketType::OperatorMinimum => subpackets
+                .iter()
+                .map(|p| calculate_packet_value(p))
+                .min()
+                .unwrap(),
+            PacketType::OperatorMaximum => subpackets
+                .iter()
+                .map(|p| calculate_packet_value(p))
+                .max()
+                .unwrap(),
+            PacketType::OperatorLessThan => {
+                if calculate_packet_value(&subpackets[0]) < calculate_packet_value(&subpackets[1]) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+            PacketType::OperatorGreaterThan => {
+                if calculate_packet_value(&subpackets[0]) > calculate_packet_value(&subpackets[1]) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+            PacketType::OperatorEqualTo => {
+                if calculate_packet_value(&subpackets[0]) == calculate_packet_value(&subpackets[1])
+                {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+            _ => 0,
+        },
+    }
+}
+
+#[derive(Debug, Clone)]
 enum Packet {
     Operator {
         version: usize,
@@ -127,7 +181,7 @@ fn packet_version(input: &str) -> IResult<&str, usize> {
     })(input)
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 enum PacketType {
     Literal,
     OperatorSum,
@@ -157,7 +211,7 @@ fn packet_type(input: &str) -> IResult<&str, PacketType> {
     Ok((input, packet_type))
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 enum LengthTypeID {
     TotalLength(usize),
     NumberOfSubpackets(usize),
@@ -221,16 +275,8 @@ fn operator_packet(input: &str) -> IResult<&str, Packet> {
             },
         ));
     } else {
-        // Fall back case, should not be uside
+        // Fall back case, should not be reached
         unimplemented!();
-        return Ok((
-            input,
-            Packet::Operator {
-                version: 0,
-                operator_type: p_type,
-                subpackets: vec![],
-            },
-        ));
     }
 }
 
