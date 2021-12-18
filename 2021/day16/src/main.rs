@@ -13,9 +13,28 @@ use nom::IResult;
 use std::fs;
 
 fn main() {
-    let input = fs::read_to_string("test_input.txt").expect("File not readable");
+    let input = fs::read_to_string("input.txt").expect("File not readable");
 
-    println!("Input: {:?}", input);
+    let binary_input = hex_to_bin(&input);
+    let p = parse_packet(&binary_input);
+
+    println!("Packets: {:?}", p);
+
+    println!("Answer 1: {}", sum_packet_version(&p.unwrap().1));
+}
+
+fn sum_packet_version(p: &Packet) -> usize {
+    match p {
+        Packet::Operator {
+            version,
+            subpackets,
+        } => {
+            let sub_packet_version_sum: usize =
+                subpackets.iter().map(|p| sum_packet_version(p)).sum();
+            return version + sub_packet_version_sum;
+        }
+        Packet::Literal { version, value } => *version,
+    }
 }
 
 #[derive(Debug)]
@@ -32,37 +51,45 @@ enum Packet {
 
 #[test]
 fn test_parse() {
-    println!("{:?}", literal_packet("110100101111111000101000"));
-
-    println!(
-        "8A004A801A8002F478 {:?}",
-        parse_packet(&hex_to_bin("8A004A801A8002F478"))
-    );
+    // println!("{:?}", literal_packet("110100101111111000101000"));
 
     // println!(
-    //     "620080001611562C8802118E34 {:?}",
-    //     parse_packet(&hex_to_bin("620080001611562C8802118E34"))
+    //     "8A004A801A8002F478 {:?}",
+    //     parse_packet(&hex_to_bin("8A004A801A8002F478"))
     // );
+
+    println!(
+        "620080001611562C8802118E34 {:?}",
+        parse_packet(&hex_to_bin("620080001611562C8802118E34"))
+    );
 
     // println!(
     //     "C0015000016115A2E0802F182340 {:?}",
     //     parse_packet(&hex_to_bin("C0015000016115A2E0802F182340"))
     // );
 
-    println!(
-        "A0016C880162017C3686B18A3D4780 {:?}",
-        parse_packet(&hex_to_bin("A0016C880162017C3686B18A3D4780"))
-    );
+    // Take subpacket that errors
+    // println!(
+    //     "{:?}",
+    //     parse_packet(
+    //         "000000000000000001011000010001010110100010111000001000000000101111000110000010001101"
+    //     )
+    // );
 
-    println!(
-        "38006F45291200 {:?}",
-        parse_packet(&hex_to_bin("38006F45291200"))
-    );
+    // println!(
+    //     "A0016C880162017C3686B18A3D4780 {:?}",
+    //     parse_packet(&hex_to_bin("A0016C880162017C3686B18A3D4780"))
+    // );
 
-    println!(
-        "EE00D40C823060 {:?}",
-        parse_packet(&hex_to_bin("EE00D40C823060"))
-    );
+    // println!(
+    //     "38006F45291200 {:?}",
+    //     parse_packet(&hex_to_bin("38006F45291200"))
+    // );
+
+    // println!(
+    //     "EE00D40C823060 {:?}",
+    //     parse_packet(&hex_to_bin("EE00D40C823060"))
+    // );
 
     assert_eq!(1, 2);
 }
@@ -72,6 +99,8 @@ fn parse_packet(input: &str) -> IResult<&str, Packet> {
 }
 
 fn literal_packet(input: &str) -> IResult<&str, Packet> {
+    println!("Parse literal: {}", input);
+
     let (input, packet_version) = packet_version(input)?;
     let (input, packet_type) = tag("100")(input)?;
     let (input, number_blocks) = many0(preceded(tag("1"), four_digits))(input)?;
@@ -115,6 +144,7 @@ fn packet_type(input: &str) -> IResult<&str, PacketType> {
     ))
 }
 
+#[derive(Debug)]
 enum LengthTypeID {
     TotalLength(usize),
     NumberOfSubpackets(usize),
@@ -130,15 +160,11 @@ fn packet_length_type_id(input: &str) -> IResult<&str, LengthTypeID> {
             usize::from_str_radix(&v.iter().collect::<String>(), 2).unwrap()
         })(input)?;
 
-        println!("Parsed length: {}", n);
-
         return Ok((input, LengthTypeID::TotalLength(n)));
     } else {
         let (input, n) = map(count(one_of("01"), 11), |v| {
             usize::from_str_radix(&v.iter().collect::<String>(), 2).unwrap()
         })(input)?;
-
-        println!("Parsed subpackets: {}", n);
 
         return Ok((input, LengthTypeID::NumberOfSubpackets(n)));
     }
@@ -148,14 +174,22 @@ fn operator_packet(input: &str) -> IResult<&str, Packet> {
     println!("Parse operator: {}", input);
 
     let (input, packet_version) = packet_version(input)?;
+    println!("Packet version: {}", packet_version);
+
     let (input, p_type) = packet_type(input)?;
+    println!("Packet type: {:?}", p_type);
+
     let (input, p_length) = packet_length_type_id(input)?;
+    println!("Length type: {:?}", p_length);
 
     if let LengthTypeID::TotalLength(n) = p_length {
-        let (ip, subpackets) = many0(parse_packet)(&input[0..n])?;
+        let length_to_parse = &input[..n];
+        let (_, subpackets) = many0(parse_packet)(length_to_parse)?;
+
+        let rest_to_parse = &input[n..];
 
         return Ok((
-            &input[n + 1..],
+            rest_to_parse,
             Packet::Operator {
                 version: packet_version,
                 subpackets: subpackets,
