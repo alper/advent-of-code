@@ -5,11 +5,12 @@ use std::fs;
 const PADDING: usize = 10;
 
 fn main() {
-    let input = fs::read_to_string("input.txt").expect("File not readable");
+    let input = fs::read_to_string("test_input.txt").expect("File not readable");
 
     let mut lines = input.lines();
 
     let enhancement_algorithm = lines.next().unwrap().trim();
+    let enhancement_algorithm = "#..##...#...####.......#...###.#...#.##.#.#.###.##...#..#.....#..#.##..#.....#...###.......###.###...##..##.#.##.#.#.......##.#.#..#.#...##....#..#.###...#......#..##...##.#.##.##.###.##.#...#..###...###..###.##.#..#..#.#.#..########..#.#.#.####....##.##.#.##.##.#...#..###...###.###..#...##.##..###.##.##.#.###.#...#####.##.####.####.##...####.####...#.#.##..#.######.#..#...##.#.##..###.##.#..##.##....##.###.###..#..##.#.#...##.#.#####...##....#.##....####.#.####.#####.#....#...###.....#####.#...###..#.####."; // Temporary override other test algorithm
 
     let _blank_line = lines.next();
 
@@ -18,8 +19,6 @@ fn main() {
     for line in lines {
         grid.push_row(line.trim().chars().collect::<Vec<char>>());
     }
-
-    let cols = grid.cols();
 
     // Add rows above and below
     for _ in 0..PADDING {
@@ -40,8 +39,8 @@ fn main() {
 
     let mut new_grid1 = Grid::init(grid.rows(), grid.cols(), '.');
 
-    for row in 1..grid.rows() - 1 {
-        for col in 1..grid.cols() - 1 {
+    for row in 0..grid.rows() {
+        for col in 0..grid.cols() {
             let cv = convolute(&grid, row, col);
             let new_pix = enhance_convolution(&cv, &enhancement_algorithm);
 
@@ -52,8 +51,8 @@ fn main() {
     pretty_print(&new_grid1);
 
     let mut new_grid2 = Grid::init(grid.rows(), grid.cols(), '.');
-    for row in 1..grid.rows() - 1 {
-        for col in 1..grid.cols() - 1 {
+    for row in 0..grid.rows() {
+        for col in 0..grid.cols() {
             let cv = convolute(&new_grid1, row, col);
             let new_pix = enhance_convolution(&cv, &enhancement_algorithm);
 
@@ -97,25 +96,79 @@ fn enhance_convolution(cv: &Vec<char>, algo: &str) -> char {
 
 #[test]
 fn test_convolute() {
-    let grid = grid![[1, 2, 3][4, 5, 6][7, 8, 9]];
+    let grid = grid![['1', '2', '3']['4', '5', '6']['7', '8', '9']];
 
     let v = convolute(&grid, 1, 1);
+    assert_eq!(v[0], '1');
 
-    assert_eq!(v[0], 1);
+    let v2 = convolute(&grid, 2, 2);
+    println!("{:?}", v2);
+    assert_eq!(v2[0], '1');
 }
 
-fn convolute<T: Copy>(grid: &Grid<T>, row: usize, col: usize) -> Vec<T> {
-    vec![
-        *grid.get(row - 1, col - 1).unwrap(),
-        *grid.get(row - 1, col).unwrap(),
-        *grid.get(row - 1, col + 1).unwrap(),
-        *grid.get(row, col - 1).unwrap(),
-        *grid.get(row, col).unwrap(),
-        *grid.get(row, col + 1).unwrap(),
-        *grid.get(row + 1, col - 1).unwrap(),
-        *grid.get(row + 1, col).unwrap(),
-        *grid.get(row + 1, col + 1).unwrap(),
-    ]
+fn convolute(grid: &Grid<char>, row: usize, col: usize) -> Vec<char> {
+    let mut v: Vec<char> = vec![];
+
+    // NW
+    if row > 0 && col > 0 {
+        v.push(*grid.get(row - 1, col - 1).unwrap());
+    } else {
+        v.push('.');
+    }
+
+    // N
+    if row > 0 {
+        v.push(*grid.get(row - 1, col).unwrap());
+    } else {
+        v.push('.');
+    }
+
+    // NE
+    if row > 0 && col < grid.cols() - 1 {
+        v.push(*grid.get(row - 1, col + 1).unwrap());
+    } else {
+        v.push('.');
+    }
+
+    // W
+    if col > 0 {
+        v.push(*grid.get(row, col - 1).unwrap());
+    } else {
+        v.push('.');
+    }
+
+    // C
+    v.push(*grid.get(row, col).unwrap());
+
+    // E
+    if col < grid.cols() - 1 {
+        v.push(*grid.get(row, col + 1).unwrap());
+    } else {
+        v.push('.');
+    }
+
+    // SW
+    if row < grid.rows() - 1 && col > 0 {
+        v.push(*grid.get(row + 1, col - 1).unwrap());
+    } else {
+        v.push('.');
+    }
+
+    // S
+    if row < grid.rows() - 1 {
+        v.push(*grid.get(row + 1, col).unwrap());
+    } else {
+        v.push('.');
+    }
+
+    // SE
+    if row < grid.rows() - 1 && col < grid.rows() - 1 {
+        v.push(*grid.get(row + 1, col + 1).unwrap());
+    } else {
+        v.push('.');
+    }
+
+    return v;
 }
 
 fn pretty_print(grid: &Grid<char>) {
