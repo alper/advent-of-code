@@ -2,10 +2,10 @@ use grid::*;
 use itertools::{DedupBy, Itertools};
 use std::fs;
 
-const PADDING: usize = 10;
+const PADDING: usize = 100;
 
 fn main() {
-    let input = fs::read_to_string("test_input.txt").expect("File not readable");
+    let input = fs::read_to_string("input.txt").expect("File not readable");
 
     let mut lines = input.lines();
 
@@ -37,36 +37,25 @@ fn main() {
 
     println!("Algorithm: {:?}", enhancement_algorithm);
 
-    let mut new_grid1 = Grid::init(grid.rows(), grid.cols(), '.');
+    for _ in 0..50 {
+        let mut new_grid1 = Grid::init(grid.rows(), grid.cols(), '.');
 
-    for row in 0..grid.rows() {
-        for col in 0..grid.cols() {
-            let cv = convolute(&grid, row, col);
-            let new_pix = conv_to_enhanced_value(&cv, &enhancement_algorithm);
+        for row in 0..grid.rows() {
+            for col in 0..grid.cols() {
+                let cv = convolute(&grid, row, col);
+                let new_pix = conv_to_enhanced_value(&cv, &enhancement_algorithm);
 
-            new_grid1[row][col] = new_pix;
+                new_grid1[row][col] = new_pix;
+            }
         }
-    }
-    println!("Grid 2");
-    pretty_print(&new_grid1);
 
-    let mut new_grid2 = Grid::init(grid.rows(), grid.cols(), '.');
-    for row in 0..grid.rows() {
-        for col in 0..grid.cols() {
-            let cv = convolute(&new_grid1, row, col);
-            let new_pix = conv_to_enhanced_value(&cv, &enhancement_algorithm);
+        println!("Grid 2");
+        pretty_print(&new_grid1);
 
-            new_grid2[row][col] = new_pix;
-        }
+        grid = new_grid1;
     }
 
-    println!("Grid 3");
-    pretty_print(&new_grid2);
-
-    println!(
-        "Answer 1: {}",
-        new_grid2.iter().filter(|c| **c == '#').count()
-    );
+    println!("Answer 1: {}", grid.iter().filter(|c| **c == '#').count());
 }
 
 #[test]
