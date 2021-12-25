@@ -1,5 +1,5 @@
 use grid::*;
-use itertools::Itertools;
+use itertools::{DedupBy, Itertools};
 use std::fs;
 
 const PADDING: usize = 10;
@@ -10,7 +10,7 @@ fn main() {
     let mut lines = input.lines();
 
     let enhancement_algorithm = lines.next().unwrap().trim();
-    let enhancement_algorithm = "#..##...#...####.......#...###.#...#.##.#.#.###.##...#..#.....#..#.##..#.....#...###.......###.###...##..##.#.##.#.#.......##.#.#..#.#...##....#..#.###...#......#..##...##.#.##.##.###.##.#...#..###...###..###.##.#..#..#.#.#..########..#.#.#.####....##.##.#.##.##.#...#..###...###.###..#...##.##..###.##.##.#.###.#...#####.##.####.####.##...####.####...#.#.##..#.######.#..#...##.#.##..###.##.#..##.##....##.###.###..#..##.#.#...##.#.#####...##....#.##....####.#.####.#####.#....#...###.....#####.#...###..#.####."; // Temporary override other test algorithm
+    // let enhancement_algorithm = "#..##...#...####.......#...###.#...#.##.#.#.###.##...#..#.....#..#.##..#.....#...###.......###.###...##..##.#.##.#.#.......##.#.#..#.#...##....#..#.###...#......#..##...##.#.##.##.###.##.#...#..###...###..###.##.#..#..#.#.#..########..#.#.#.####....##.##.#.##.##.#...#..###...###.###..#...##.##..###.##.##.#.###.#...#####.##.####.####.##...####.####...#.#.##..#.######.#..#...##.#.##..###.##.#..##.##....##.###.###..#..##.#.#...##.#.#####...##....#.##....####.#.####.#####.#....#...###.....#####.#...###..#.####."; // Temporary override other test algorithm
 
     let _blank_line = lines.next();
 
@@ -32,35 +32,35 @@ fn main() {
         grid.push_col(vec!['.'; grid.rows()]);
     }
 
-    println!("Gird ");
+    println!("Grid");
     pretty_print(&grid);
 
-    println!("Input: {:?}", enhancement_algorithm);
+    println!("Algorithm: {:?}", enhancement_algorithm);
 
     let mut new_grid1 = Grid::init(grid.rows(), grid.cols(), '.');
 
     for row in 0..grid.rows() {
         for col in 0..grid.cols() {
             let cv = convolute(&grid, row, col);
-            let new_pix = enhance_convolution(&cv, &enhancement_algorithm);
+            let new_pix = conv_to_enhanced_value(&cv, &enhancement_algorithm);
 
             new_grid1[row][col] = new_pix;
         }
     }
-    println!("Gird 2");
+    println!("Grid 2");
     pretty_print(&new_grid1);
 
     let mut new_grid2 = Grid::init(grid.rows(), grid.cols(), '.');
     for row in 0..grid.rows() {
         for col in 0..grid.cols() {
             let cv = convolute(&new_grid1, row, col);
-            let new_pix = enhance_convolution(&cv, &enhancement_algorithm);
+            let new_pix = conv_to_enhanced_value(&cv, &enhancement_algorithm);
 
             new_grid2[row][col] = new_pix;
         }
     }
 
-    println!("Gird 3");
+    println!("Grid 3");
     pretty_print(&new_grid2);
 
     println!(
@@ -74,13 +74,13 @@ fn test_enhance_convolution() {
     let algo = "######......";
 
     let convo1 = vec!['.', '#', '.', '#'];
-    assert_eq!(enhance_convolution(&convo1, &algo), '#');
+    assert_eq!(conv_to_enhanced_value(&convo1, &algo), '#');
 
     let convo2 = vec!['#', '.', '.', '.'];
-    assert_eq!(enhance_convolution(&convo2, &algo), '.');
+    assert_eq!(conv_to_enhanced_value(&convo2, &algo), '.');
 }
 
-fn enhance_convolution(cv: &Vec<char>, algo: &str) -> char {
+fn conv_to_enhanced_value(cv: &Vec<char>, algo: &str) -> char {
     let bitstring: String = cv
         .iter()
         .map(|c| match c {
@@ -109,32 +109,34 @@ fn test_convolute() {
 fn convolute(grid: &Grid<char>, row: usize, col: usize) -> Vec<char> {
     let mut v: Vec<char> = vec![];
 
+    let default_value = *grid.get(0, 0).unwrap();
+
     // NW
     if row > 0 && col > 0 {
         v.push(*grid.get(row - 1, col - 1).unwrap());
     } else {
-        v.push('.');
+        v.push(default_value);
     }
 
     // N
     if row > 0 {
         v.push(*grid.get(row - 1, col).unwrap());
     } else {
-        v.push('.');
+        v.push(default_value);
     }
 
     // NE
     if row > 0 && col < grid.cols() - 1 {
         v.push(*grid.get(row - 1, col + 1).unwrap());
     } else {
-        v.push('.');
+        v.push(default_value);
     }
 
     // W
     if col > 0 {
         v.push(*grid.get(row, col - 1).unwrap());
     } else {
-        v.push('.');
+        v.push(default_value);
     }
 
     // C
@@ -144,28 +146,28 @@ fn convolute(grid: &Grid<char>, row: usize, col: usize) -> Vec<char> {
     if col < grid.cols() - 1 {
         v.push(*grid.get(row, col + 1).unwrap());
     } else {
-        v.push('.');
+        v.push(default_value);
     }
 
     // SW
     if row < grid.rows() - 1 && col > 0 {
         v.push(*grid.get(row + 1, col - 1).unwrap());
     } else {
-        v.push('.');
+        v.push(default_value);
     }
 
     // S
     if row < grid.rows() - 1 {
         v.push(*grid.get(row + 1, col).unwrap());
     } else {
-        v.push('.');
+        v.push(default_value);
     }
 
     // SE
     if row < grid.rows() - 1 && col < grid.rows() - 1 {
         v.push(*grid.get(row + 1, col + 1).unwrap());
     } else {
-        v.push('.');
+        v.push(default_value);
     }
 
     return v;
