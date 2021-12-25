@@ -1,5 +1,4 @@
 use grid::*;
-use itertools::{DedupBy, Itertools};
 use std::fs;
 
 const PADDING: usize = 100;
@@ -10,7 +9,6 @@ fn main() {
     let mut lines = input.lines();
 
     let enhancement_algorithm = lines.next().unwrap().trim();
-    // let enhancement_algorithm = "#..##...#...####.......#...###.#...#.##.#.#.###.##...#..#.....#..#.##..#.....#...###.......###.###...##..##.#.##.#.#.......##.#.#..#.#...##....#..#.###...#......#..##...##.#.##.##.###.##.#...#..###...###..###.##.#..#..#.#.#..########..#.#.#.####....##.##.#.##.##.#...#..###...###.###..#...##.##..###.##.##.#.###.#...#####.##.####.####.##...####.####...#.#.##..#.######.#..#...##.#.##..###.##.#..##.##....##.###.###..#..##.#.#...##.#.#####...##....#.##....####.#.####.#####.#....#...###.....#####.#...###..#.####."; // Temporary override other test algorithm
 
     let _blank_line = lines.next();
 
@@ -43,7 +41,7 @@ fn main() {
         for row in 0..grid.rows() {
             for col in 0..grid.cols() {
                 let cv = convolute(&grid, row, col);
-                let new_pix = conv_to_enhanced_value(&cv, &enhancement_algorithm);
+                let new_pix = conv_to_enhanced_value(&cv, enhancement_algorithm);
 
                 new_grid1[row][col] = new_pix;
             }
@@ -69,7 +67,7 @@ fn test_enhance_convolution() {
     assert_eq!(conv_to_enhanced_value(&convo2, &algo), '.');
 }
 
-fn conv_to_enhanced_value(cv: &Vec<char>, algo: &str) -> char {
+fn conv_to_enhanced_value(cv: &[char], algo: &str) -> char {
     let bitstring: String = cv
         .iter()
         .map(|c| match c {
@@ -159,7 +157,7 @@ fn convolute(grid: &Grid<char>, row: usize, col: usize) -> Vec<char> {
         v.push(default_value);
     }
 
-    return v;
+    v
 }
 
 fn pretty_print(grid: &Grid<char>) {
