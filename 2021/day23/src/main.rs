@@ -1,5 +1,4 @@
 use itertools::Itertools;
-use std::collections::HashMap;
 use std::fmt::Debug;
 use std::fs;
 
@@ -22,6 +21,16 @@ impl Burrow {
         }
     }
 
+    fn room_index_to_letter(&self, index: usize) -> char {
+        match index {
+            0 => 'A',
+            1 => 'B',
+            2 => 'C',
+            3 => 'D',
+            _ => '.',
+        }
+    }
+
     fn all_possible_moves(&self) -> Vec<Burrow> {
         let mut v = vec![];
 
@@ -31,15 +40,42 @@ impl Burrow {
             if room[0] == '.' && room[1] == '.' {
                 continue;
             } else {
+                let hallway_spots = self.possible_hallway_spots(i);
+
+                // TODO move this free spot in room checking into the `swap_room_to_hall` function?
                 let mut room_index = 1;
 
                 if room[1] == '.' {
                     room_index = 0;
                 }
-                let hallway_spots = self.possible_hallway_spots(i);
 
                 for spot in hallway_spots {
                     let new_burrow = self.swap_room_to_hall(i, room_index, spot);
+                    v.push(new_burrow);
+                }
+            }
+        }
+
+        // TODO also cover the case where an amphipod can move from the wrong room to the right room at once?
+        // For now ignore that.
+
+        for hallway_index in 0..self.hallway.len() {
+            let amphipod = self.hallway[hallway_index];
+
+            if amphipod != '.' {
+                let destination_room_index = self.room_letter_to_index(amphipod);
+
+                let steps = self.possible_to_room(hallway_index, destination_room_index);
+
+                if steps > 0 {
+                    let mut room_index = 0;
+                    if self.rooms[destination_room_index][0] != '.' {
+                        room_index = 1;
+                    }
+
+                    let new_burrow =
+                        self.swap_room_to_hall(destination_room_index, room_index, hallway_index);
+
                     v.push(new_burrow);
                 }
             }
@@ -49,11 +85,12 @@ impl Burrow {
     }
 
     fn swap_room_to_hall(&self, room: usize, room_index: usize, hallway_index: usize) -> Burrow {
-        let mut b2 = self.clone();
+        let mut b2 = *self;
 
-        let tmp = b2.hallway[hallway_index];
-        b2.hallway[hallway_index] = b2.rooms[room][room_index];
-        b2.rooms[room][room_index] = tmp;
+        std::mem::swap(
+            &mut b2.hallway[hallway_index],
+            &mut b2.rooms[room][room_index],
+        );
 
         b2
     }
@@ -124,10 +161,27 @@ impl Burrow {
         steps
     }
 
-    fn possible_hallway_spots(&self, room: usize) -> Vec<usize> {
+    fn possible_hallway_spots(&self, room_number: usize) -> Vec<usize> {
         let mut v: Vec<usize> = vec![];
 
-        match room {
+        // Check whether the amphipods in this room are already at their destination
+        let correct_amphipod_letter = self.room_index_to_letter(room_number);
+
+        // Either two of the correct
+        if self.rooms[room_number][0] == correct_amphipod_letter
+            && self.rooms[room_number][1] == correct_amphipod_letter
+        {
+            return v;
+        }
+
+        // Or one of the correct at the bottom in which case they don't move either
+        if self.rooms[room_number][0] == correct_amphipod_letter
+            && self.rooms[room_number][1] == '.'
+        {
+            return v;
+        }
+
+        match room_number {
             0 => {
                 if self.hallway[1] == '.' {
                     v.push(1);
@@ -280,7 +334,7 @@ impl Burrow {
             _ => {}
         }
 
-        v.sort();
+        v.sort_unstable();
 
         v
     }
@@ -378,6 +432,14 @@ fn main() {
     let b = Burrow {
         hallway: ['.'; 11],
         rooms: [['A', 'B'], ['D', 'C'], ['A', 'D'], ['C', 'B']],
+    };
+    let b = Burrow {
+        hallway: ['.', '.', '.', '.', '.', 'D', '.', '.', '.', '.', '.'],
+        rooms: [['A', '.'], ['B', 'B'], ['C', 'C'], ['A', 'D']],
+    };
+    let b = Burrow {
+        hallway: ['.', '.', '.', 'B', '.', '.', '.', '.', '.', '.', '.'],
+        rooms: [['A', 'B'], ['D', 'C'], ['C', '.'], ['A', 'D']],
     };
 
     println!("{:?}", b);
