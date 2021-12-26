@@ -1,7 +1,6 @@
 use itertools::Itertools;
 use pathfinding::prelude::dijkstra;
 use std::fmt::Debug;
-use std::fs;
 use std::hash::Hash;
 
 #[derive(Copy, Clone, Eq, PartialEq, Hash)]
@@ -20,6 +19,16 @@ impl Burrow {
             'C' => 2,
             'D' => 3,
             _ => 9,
+        }
+    }
+
+    fn amphipod_cost_factor(letter: char) -> usize {
+        match letter {
+            'A' => 1,
+            'B' => 10,
+            'C' => 100,
+            'D' => 1000,
+            _ => 0,
         }
     }
 
@@ -51,9 +60,17 @@ impl Burrow {
                     room_index = 0;
                 }
 
-                for spot in hallway_spots {
+                let amphipod = room[room_index];
+                let cost_factor = Burrow::amphipod_cost_factor(amphipod);
+                let mut steps_addition = 0;
+                if room_index == 0 {
+                    steps_addition = 1;
+                }
+
+                for (spot, steps) in hallway_spots {
                     let new_burrow = self.swap_room_to_hall(i, room_index, spot);
-                    v.push((new_burrow, 1));
+
+                    v.push((new_burrow, (steps + steps_addition) * cost_factor));
                 }
             }
         }
@@ -78,7 +95,8 @@ impl Burrow {
                     let new_burrow =
                         self.swap_room_to_hall(destination_room_index, room_index, hallway_index);
 
-                    v.push((new_burrow, 1));
+                    let move_cost = Burrow::amphipod_cost_factor(amphipod) * steps;
+                    v.push((new_burrow, move_cost));
                 }
             }
         }
@@ -163,8 +181,10 @@ impl Burrow {
         steps
     }
 
-    fn possible_hallway_spots(&self, room_number: usize) -> Vec<usize> {
-        let mut v: Vec<usize> = vec![];
+    /// Returns a vec with a 2-tuple with the index of the hallway position
+    /// you can reach and the steps necessary to get there from the room_index=1
+    fn possible_hallway_spots(&self, room_number: usize) -> Vec<(usize, usize)> {
+        let mut v: Vec<(usize, usize)> = vec![];
 
         // Check whether the amphipods in this room are already at their destination
         let correct_amphipod_letter = self.room_index_to_letter(room_number);
@@ -186,23 +206,23 @@ impl Burrow {
         match room_number {
             0 => {
                 if self.hallway[1] == '.' {
-                    v.push(1);
+                    v.push((1, 2));
                 }
 
                 if self.hallway[1] == '.' && self.hallway[0] == '.' {
-                    v.push(0);
+                    v.push((0, 3));
                 }
 
                 if self.hallway[3] == '.' {
-                    v.push(3);
+                    v.push((3, 2));
                 }
 
                 if self.hallway[3] == '.' && self.hallway[5] == '.' {
-                    v.push(5);
+                    v.push((5, 4));
                 }
 
                 if self.hallway[3] == '.' && self.hallway[5] == '.' && self.hallway[7] == '.' {
-                    v.push(7);
+                    v.push((7, 6));
                 }
 
                 if self.hallway[3] == '.'
@@ -210,7 +230,7 @@ impl Burrow {
                     && self.hallway[7] == '.'
                     && self.hallway[9] == '.'
                 {
-                    v.push(9);
+                    v.push((9, 8));
                 }
 
                 if self.hallway[3] == '.'
@@ -219,35 +239,35 @@ impl Burrow {
                     && self.hallway[9] == '.'
                     && self.hallway[10] == '.'
                 {
-                    v.push(10);
+                    v.push((10, 9));
                 }
             }
             1 => {
                 // 3 / 1 / 0
                 if self.hallway[3] == '.' {
-                    v.push(3);
+                    v.push((3, 2));
                 }
 
                 if self.hallway[3] == '.' && self.hallway[1] == '.' {
-                    v.push(1);
+                    v.push((1, 4));
                 }
 
                 if self.hallway[3] == '.' && self.hallway[1] == '.' && self.hallway[0] == '.' {
-                    v.push(3);
+                    v.push((3, 5));
                 }
 
                 // 5 / 7 / 9 / 10
 
                 if self.hallway[5] == '.' {
-                    v.push(5);
+                    v.push((5, 2));
                 }
 
                 if self.hallway[5] == '.' && self.hallway[7] == '.' {
-                    v.push(7);
+                    v.push((7, 4));
                 }
 
                 if self.hallway[5] == '.' && self.hallway[7] == '.' && self.hallway[9] == '.' {
-                    v.push(9);
+                    v.push((9, 6));
                 }
 
                 if self.hallway[5] == '.'
@@ -255,21 +275,21 @@ impl Burrow {
                     && self.hallway[9] == '.'
                     && self.hallway[10] == '.'
                 {
-                    v.push(10);
+                    v.push((10, 7));
                 }
             }
             2 => {
                 // 5 / 3 / 1 / 0
                 if self.hallway[5] == '.' {
-                    v.push(5);
+                    v.push((5, 2));
                 }
 
                 if self.hallway[5] == '.' && self.hallway[3] == '.' {
-                    v.push(3);
+                    v.push((3, 4));
                 }
 
                 if self.hallway[5] == '.' && self.hallway[3] == '.' && self.hallway[1] == '.' {
-                    v.push(1);
+                    v.push((1, 6));
                 }
 
                 if self.hallway[5] == '.'
@@ -277,34 +297,34 @@ impl Burrow {
                     && self.hallway[1] == '.'
                     && self.hallway[0] == '.'
                 {
-                    v.push(0);
+                    v.push((0, 7));
                 }
 
                 // 7 / 9 / 10
                 if self.hallway[7] == '.' {
-                    v.push(7);
+                    v.push((7, 2));
                 }
 
                 if self.hallway[7] == '.' && self.hallway[9] == '.' {
-                    v.push(9);
+                    v.push((9, 4));
                 }
 
                 if self.hallway[7] == '.' && self.hallway[9] == '.' && self.hallway[10] == '.' {
-                    v.push(10);
+                    v.push((10, 5));
                 }
             }
             3 => {
                 // 7 / 5 / 3 / 1 0
                 if self.hallway[7] == '.' {
-                    v.push(7);
+                    v.push((7, 2));
                 }
 
                 if self.hallway[7] == '.' && self.hallway[5] == '.' {
-                    v.push(5);
+                    v.push((5, 4));
                 }
 
                 if self.hallway[7] == '.' && self.hallway[5] == '.' && self.hallway[3] == '.' {
-                    v.push(3);
+                    v.push((3, 6));
                 }
 
                 if self.hallway[7] == '.'
@@ -312,7 +332,7 @@ impl Burrow {
                     && self.hallway[3] == '.'
                     && self.hallway[1] == '.'
                 {
-                    v.push(1);
+                    v.push((1, 8));
                 }
 
                 if self.hallway[7] == '.'
@@ -321,22 +341,22 @@ impl Burrow {
                     && self.hallway[1] == '.'
                     && self.hallway[0] == '.'
                 {
-                    v.push(0);
+                    v.push((0, 9));
                 }
 
                 // 9 / 10
                 if self.hallway[9] == '.' {
-                    v.push(9);
+                    v.push((9, 2));
                 }
 
                 if self.hallway[9] == '.' && self.hallway[10] == '.' {
-                    v.push(10);
+                    v.push((10, 3));
                 }
             }
             _ => {}
         }
 
-        v.sort_unstable();
+        v.sort();
 
         v
     }
@@ -375,21 +395,27 @@ mod burrow_tests {
             rooms: [['A', 'B'], ['D', 'C'], ['A', 'D'], ['C', 'B']],
         };
 
-        assert_eq!(b.possible_hallway_spots(0), vec![0, 1, 3, 5, 7, 9, 10]);
+        assert_eq!(
+            b.possible_hallway_spots(0),
+            vec![(0, 0), (1, 1), (3, 3), (5, 1), (7, 1), (9, 1), (10, 1)]
+        );
 
         let b = Burrow {
             hallway: ['.', '.', '.', 'B', '.', '.', '.', '.', '.', '.', '.'],
             rooms: [['A', 'B'], ['D', 'C'], ['A', 'D'], ['C', 'B']],
         };
 
-        assert_eq!(b.possible_hallway_spots(1), vec![5, 7, 9, 10]);
+        assert_eq!(
+            b.possible_hallway_spots(1),
+            vec![(5, 1), (7, 1), (9, 1), (10, 1)]
+        );
 
         let b = Burrow {
             hallway: ['.', '.', '.', 'B', '.', '.', '.', 'B', '.', '.', '.'],
             rooms: [['A', 'B'], ['D', 'C'], ['A', 'D'], ['C', 'B']],
         };
 
-        assert_eq!(b.possible_hallway_spots(2), vec![5]);
+        assert_eq!(b.possible_hallway_spots(2), vec![(5, 1)]);
     }
 
     #[test]
@@ -433,11 +459,14 @@ mod burrow_tests {
 }
 
 fn main() {
-    // let input = fs::read_to_string("test_input.txt").expect("File not readable");
-
-    let b = Burrow {
+    let test_input = Burrow {
         hallway: ['.'; 11],
-        rooms: [['A', 'B'], ['D', 'C'], ['A', 'D'], ['C', 'B']],
+        rooms: [['A', 'B'], ['D', 'C'], ['C', 'B'], ['A', 'D']],
+    };
+
+    let puzzle_input = Burrow {
+        hallway: ['.'; 11],
+        rooms: [['D', 'C'], ['D', 'C'], ['B', 'A'], ['A', 'B']],
     };
     // let b = Burrow {
     //     hallway: ['.', '.', '.', '.', '.', 'D', '.', '.', '.', '.', '.'],
@@ -463,11 +492,13 @@ fn main() {
         rooms: [['A', 'A'], ['B', 'B'], ['C', 'C'], ['D', 'D']],
     };
 
-    let result = dijkstra(&b, |&b| b.all_possible_moves(), |c| *c == goal);
+    let result = dijkstra(&puzzle_input, |&b| b.all_possible_moves(), |c| *c == goal);
 
-    let moves = result.unwrap().0;
+    let (path, path_cost) = result.unwrap();
 
-    for m in moves {
+    for m in path {
         println!("{:?}", m);
     }
+
+    println!("Cost: {}", path_cost);
 }
