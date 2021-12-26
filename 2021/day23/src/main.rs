@@ -1,8 +1,10 @@
 use itertools::Itertools;
+use pathfinding::prelude::dijkstra;
 use std::fmt::Debug;
 use std::fs;
+use std::hash::Hash;
 
-#[derive(Copy, Clone, Eq, PartialEq)]
+#[derive(Copy, Clone, Eq, PartialEq, Hash)]
 struct Burrow {
     hallway: [char; 11],
     // Each array is a room in order: A B C D
@@ -31,7 +33,7 @@ impl Burrow {
         }
     }
 
-    fn all_possible_moves(&self) -> Vec<Burrow> {
+    fn all_possible_moves(&self) -> Vec<(Burrow, usize)> {
         let mut v = vec![];
 
         for i in 0..self.rooms.len() {
@@ -51,7 +53,7 @@ impl Burrow {
 
                 for spot in hallway_spots {
                     let new_burrow = self.swap_room_to_hall(i, room_index, spot);
-                    v.push(new_burrow);
+                    v.push((new_burrow, 1));
                 }
             }
         }
@@ -76,7 +78,7 @@ impl Burrow {
                     let new_burrow =
                         self.swap_room_to_hall(destination_room_index, room_index, hallway_index);
 
-                    v.push(new_burrow);
+                    v.push((new_burrow, 1));
                 }
             }
         }
@@ -340,6 +342,10 @@ impl Burrow {
     }
 }
 
+// impl Hash for Burrow {
+//     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {}
+// }
+
 impl Debug for Burrow {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
@@ -427,28 +433,41 @@ mod burrow_tests {
 }
 
 fn main() {
-    let input = fs::read_to_string("test_input.txt").expect("File not readable");
+    // let input = fs::read_to_string("test_input.txt").expect("File not readable");
 
     let b = Burrow {
         hallway: ['.'; 11],
         rooms: [['A', 'B'], ['D', 'C'], ['A', 'D'], ['C', 'B']],
     };
-    let b = Burrow {
-        hallway: ['.', '.', '.', '.', '.', 'D', '.', '.', '.', '.', '.'],
-        rooms: [['A', '.'], ['B', 'B'], ['C', 'C'], ['A', 'D']],
+    // let b = Burrow {
+    //     hallway: ['.', '.', '.', '.', '.', 'D', '.', '.', '.', '.', '.'],
+    //     rooms: [['A', '.'], ['B', 'B'], ['C', 'C'], ['A', 'D']],
+    // };
+    // let b = Burrow {
+    //     hallway: ['.', '.', '.', 'B', '.', '.', '.', '.', '.', '.', '.'],
+    //     rooms: [['A', 'B'], ['D', 'C'], ['C', '.'], ['A', 'D']],
+    // };
+
+    // println!("{:?}", b);
+
+    // let moves = b.all_possible_moves();
+
+    // println!("Moves");
+    // for m in moves {
+    //     println!("{:?}", m);
+    //     println!();
+    // }
+
+    let goal = Burrow {
+        hallway: ['.', '.', '.', '.', '.', '.', '.', '.', '.', '.', '.'],
+        rooms: [['A', 'A'], ['B', 'B'], ['C', 'C'], ['D', 'D']],
     };
-    let b = Burrow {
-        hallway: ['.', '.', '.', 'B', '.', '.', '.', '.', '.', '.', '.'],
-        rooms: [['A', 'B'], ['D', 'C'], ['C', '.'], ['A', 'D']],
-    };
 
-    println!("{:?}", b);
+    let result = dijkstra(&b, |&b| b.all_possible_moves(), |c| *c == goal);
 
-    let moves = b.all_possible_moves();
+    let moves = result.unwrap().0;
 
-    println!("Moves");
     for m in moves {
         println!("{:?}", m);
-        println!();
     }
 }
