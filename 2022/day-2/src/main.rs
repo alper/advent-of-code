@@ -1,4 +1,127 @@
-use std::fs;
+extern crate nom;
+
+use std::{fs, cmp::Ordering, slice::Windows, collections::binary_heap::Drain};
+use nom::{IResult, error::{self, ErrorKind}, complete::take, sequence::tuple, bytes::streaming::take_while, character::{is_alphabetic, complete::{alpha1, space1}, is_space}};
+use toodee::DrainRow;
+
+#[derive(Debug, PartialEq, Eq, Copy, Clone)]
+enum Play {
+    Rock,
+    Paper,
+    Scissors
+}
+
+impl Play {
+    fn points(&self) -> usize {
+        match &self {
+            Play::Rock => 1,
+            Play::Paper => 2,
+            Play::Scissors => 3
+        }
+    }
+}
+
+fn round_result(me: Play, opponent: Play) -> usize {
+    match me.cmp(&opponent) {
+        Ordering::Less => 0,
+        Ordering::Equal => 3,
+        Ordering::Greater => 6
+    }
+}
+
+fn round_move(opponent: Play, res: Outcome) -> Play {
+    match res {
+        Outcome::Loss => match opponent {
+                Play::Rock => Play::Scissors,
+                Play::Paper => Play::Rock,
+                Play::Scissors => Play::Paper,
+            }
+        Outcome::Draw => opponent.clone(),
+        Outcome::Win => match opponent {
+            Play::Rock => Play::Paper,
+            Play::Paper => Play::Scissors,
+            Play::Scissors => Play::Rock
+        }
+    }
+}
+
+impl Ord for Play {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        if self == other {
+            return Ordering::Equal;
+        } else if *self == Play::Paper && *other == Play::Scissors ||
+        *self == Play::Rock && *other == Play::Paper ||
+        *self == Play::Scissors && *other == Play::Rock {
+            return Ordering::Less;
+        } else if *self == Play::Rock && *other == Play::Scissors ||
+        *self == Play::Paper && *other == Play::Rock ||
+        *self == Play::Scissors && *other == Play::Paper {
+            return Ordering::Greater
+        }
+
+        return Ordering::Equal;
+    }
+}
+
+impl PartialOrd for Play {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+#[derive(Debug, Copy, Clone)]
+enum Outcome {
+    Loss,
+    Draw,
+    Win
+}
+
+impl Outcome {
+    fn points(self) -> usize {
+        match self {
+            Outcome::Loss => 0,
+            Outcome::Draw => 3,
+            Outcome::Win => 6
+        }
+    }
+}
+
+fn parse_move(input: &str) -> IResult<&str, Play> {
+    let (input, m) = alpha1(input)?;
+
+    match m {
+        "A" => Ok((input, Play::Rock)),
+        "B" => Ok((input, Play::Paper)),
+        "C" => Ok((input, Play::Scissors)),
+        "X" => Ok((input, Play::Rock)),
+        "Y" => Ok((input, Play::Paper)),
+        "Z" => Ok((input, Play::Scissors)),
+        _ => unimplemented!()
+    }
+}
+
+fn parse_outcome(input: &str) -> IResult<&str, Outcome> {
+    let (input, o) = alpha1(input)?;
+
+    match o {
+        "X" => Ok((input, Outcome::Loss)),
+        "Y" => Ok((input, Outcome::Draw)),
+        "Z" => Ok((input, Outcome::Win)),
+        _ => unimplemented!()
+    }
+}
+
+fn rps_move(input: &str) -> IResult<&str, (Play, Play)> {
+    let (input, (move1, _, move2)) = tuple((parse_move, space1, parse_move))(input)?;
+
+    Ok((input, (move1, move2)))
+}
+
+fn rps_move_part2(input: &str) -> IResult<&str, (Play, Outcome)> {
+    let (input, (move1, _, outcome)) = tuple((parse_move, space1, parse_outcome))(input)?;
+
+    Ok((input, (move1, outcome)))
+}
 
 fn main() {
     let input = fs::read_to_string("full_input.txt").expect("File not readable");
@@ -6,114 +129,19 @@ fn main() {
     // Part 1
     println!("Part 1");
 
-    let v: Vec<usize> = input.lines().map(|moves| moves.split(" ").collect::<Vec<_>>()).map(|v| {
-        let shape_score = match v[1] {
-            "X" => 1,
-            "Y" => 2,
-            "Z" => 3,
-            _ => 0
-        };
+    let parsed = input.lines().map(|l| rps_move(l).unwrap().1);
 
-        let mut round_score = 0;
+    let points = parsed.map(|moves| moves.1.points() + round_result(moves.1, moves.0));
 
-        if v[0] == "A" {
-            if v[1] == "X" {
-                round_score = 3;
-            } else if v[1] == "Y" {
-                round_score = 6;
-            } else if v[1] == "Z" {
-                round_score = 0;
-            }
-        }
-
-        if v[0] == "B" {
-            if v[1] == "X" {
-                round_score = 0;
-            } else if v[1] == "Y" {
-                round_score = 3;
-            } else if v[1] == "Z" {
-                round_score = 6;
-            }
-        }
-
-        if v[0] == "C" {
-            if v[1] == "X" {
-                round_score = 6;
-            } else if v[1] == "Y" {
-                round_score = 0;
-            } else if v[1] == "Z" {
-                round_score = 3;
-            }
-        }
-
-        return round_score + shape_score;
-    }).collect();
-
-    println!("Answer part 1: {:?}", v.iter().sum::<usize>());
+    println!("Answer part 1: {:?}", points.sum::<usize>());
 
 
     // Part 2
     println!("Part 2");
 
-    let v: Vec<usize> = input.lines().map(|moves| moves.split(" ").collect::<Vec<_>>()).map(|v| {
-        let round_score = match v[1] {
-            "X" => 0,
-            "Y" => 3,
-            "Z" => 6,
-            _ => 0
-        };
+    let parsed2 = input.lines().map(|l| rps_move_part2(l).unwrap().1);
 
-        println!("Decoded: {}, Round Score: {}", v[1], round_score);
+    let points = parsed2.map(|moves| round_move(moves.0, moves.1).points() + moves.1.points());
 
-        #[derive(Debug)]
-        enum Shape {
-            Rock,
-            Paper,
-            Scissors
-        }
-
-        let mut my_move: Shape = Shape::Rock;
-
-        if v[0] == "A" {
-            if v[1] == "X" {
-                my_move = Shape::Scissors;
-            } else if v[1] == "Y" {
-                my_move = Shape::Rock;
-            } else if v[1] == "Z" {
-                my_move = Shape::Paper;
-            }
-        }
-
-        if v[0] == "B" {
-            if v[1] == "X" {
-                my_move = Shape::Rock;
-            } else if v[1] == "Y" {
-                my_move = Shape::Paper;
-            } else if v[1] == "Z" {
-                my_move = Shape::Scissors;
-            }
-        }
-
-        if v[0] == "C" {
-            if v[1] == "X" {
-                my_move = Shape::Paper;
-            } else if v[1] == "Y" {
-                my_move = Shape::Scissors;
-            } else if v[1] == "Z" {
-                my_move = Shape::Rock;
-            }
-        }
-
-        println!("My move: {:?}", my_move);
-
-        let shape_score = match my_move {
-            Shape::Rock => 1,
-            Shape::Paper => 2,
-            Shape::Scissors => 3,
-        };
-
-        return round_score + shape_score;
-    }).collect();
-
-    println!("Answer part 2: {:?}", v.iter().sum::<usize>());
+    println!("Answer part 2: {:?}", points.sum::<usize>());
 }
