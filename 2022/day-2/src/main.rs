@@ -1,14 +1,17 @@
 extern crate nom;
 
-use std::{fs, cmp::Ordering, slice::Windows, collections::binary_heap::Drain};
-use nom::{IResult, error::{self, ErrorKind}, complete::take, sequence::tuple, bytes::streaming::take_while, character::{is_alphabetic, complete::{alpha1, space1}, is_space}};
-use toodee::DrainRow;
+use nom::{
+    character::complete::{alpha1, space1},
+    sequence::tuple,
+    IResult,
+};
+use std::{cmp::Ordering, fs};
 
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 enum Play {
     Rock,
     Paper,
-    Scissors
+    Scissors,
 }
 
 impl Play {
@@ -16,7 +19,7 @@ impl Play {
         match &self {
             Play::Rock => 1,
             Play::Paper => 2,
-            Play::Scissors => 3
+            Play::Scissors => 3,
         }
     }
 }
@@ -25,23 +28,23 @@ fn round_result(me: Play, opponent: Play) -> usize {
     match me.cmp(&opponent) {
         Ordering::Less => 0,
         Ordering::Equal => 3,
-        Ordering::Greater => 6
+        Ordering::Greater => 6,
     }
 }
 
 fn round_move(opponent: Play, res: Outcome) -> Play {
     match res {
         Outcome::Loss => match opponent {
-                Play::Rock => Play::Scissors,
-                Play::Paper => Play::Rock,
-                Play::Scissors => Play::Paper,
-            }
-        Outcome::Draw => opponent.clone(),
+            Play::Rock => Play::Scissors,
+            Play::Paper => Play::Rock,
+            Play::Scissors => Play::Paper,
+        },
+        Outcome::Draw => opponent,
         Outcome::Win => match opponent {
             Play::Rock => Play::Paper,
             Play::Paper => Play::Scissors,
-            Play::Scissors => Play::Rock
-        }
+            Play::Scissors => Play::Rock,
+        },
     }
 }
 
@@ -49,17 +52,19 @@ impl Ord for Play {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         if self == other {
             return Ordering::Equal;
-        } else if *self == Play::Paper && *other == Play::Scissors ||
-        *self == Play::Rock && *other == Play::Paper ||
-        *self == Play::Scissors && *other == Play::Rock {
+        } else if *self == Play::Paper && *other == Play::Scissors
+            || *self == Play::Rock && *other == Play::Paper
+            || *self == Play::Scissors && *other == Play::Rock
+        {
             return Ordering::Less;
-        } else if *self == Play::Rock && *other == Play::Scissors ||
-        *self == Play::Paper && *other == Play::Rock ||
-        *self == Play::Scissors && *other == Play::Paper {
-            return Ordering::Greater
+        } else if *self == Play::Rock && *other == Play::Scissors
+            || *self == Play::Paper && *other == Play::Rock
+            || *self == Play::Scissors && *other == Play::Paper
+        {
+            return Ordering::Greater;
         }
 
-        return Ordering::Equal;
+        Ordering::Equal
     }
 }
 
@@ -73,7 +78,7 @@ impl PartialOrd for Play {
 enum Outcome {
     Loss,
     Draw,
-    Win
+    Win,
 }
 
 impl Outcome {
@@ -81,7 +86,7 @@ impl Outcome {
         match self {
             Outcome::Loss => 0,
             Outcome::Draw => 3,
-            Outcome::Win => 6
+            Outcome::Win => 6,
         }
     }
 }
@@ -96,7 +101,7 @@ fn parse_move(input: &str) -> IResult<&str, Play> {
         "X" => Ok((input, Play::Rock)),
         "Y" => Ok((input, Play::Paper)),
         "Z" => Ok((input, Play::Scissors)),
-        _ => unimplemented!()
+        _ => unimplemented!(),
     }
 }
 
@@ -107,7 +112,7 @@ fn parse_outcome(input: &str) -> IResult<&str, Outcome> {
         "X" => Ok((input, Outcome::Loss)),
         "Y" => Ok((input, Outcome::Draw)),
         "Z" => Ok((input, Outcome::Win)),
-        _ => unimplemented!()
+        _ => unimplemented!(),
     }
 }
 
@@ -134,7 +139,6 @@ fn main() {
     let points = parsed.map(|moves| moves.1.points() + round_result(moves.1, moves.0));
 
     println!("Answer part 1: {:?}", points.sum::<usize>());
-
 
     // Part 2
     println!("Part 2");
