@@ -8,7 +8,7 @@ fn signal_start(input: &str, distinct: usize) -> usize {
     let mut counter = 0;
     for potential in w {
         let mut uniq = HashSet::new();
-        if potential.into_iter().all(move |x| uniq.insert(x)) {
+        if potential.iter().all(move |x| uniq.insert(x)) {
             println!("Found: {}", potential.iter().collect::<String>());
             break;
         }
