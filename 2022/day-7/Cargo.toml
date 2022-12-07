@@ -1,0 +1,12 @@
+[package]
+name = "day-7"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+array2d = "0.2.1"
+grid = "0.6.0"
+itertools = "0.10.3"
+nom = "7.1.1"
+slab_tree = "0.3.2"
+toodee = "0.3.0"
