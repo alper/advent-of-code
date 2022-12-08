@@ -1,47 +1,36 @@
 use array2d::Array2D;
 use std::fs;
 
-fn is_visible(array: &Array2D<usize>, row: usize, col: usize) -> bool {
-    let height = *array.get(row, col).unwrap();
+fn debug_array_usize(array: &Array2D<usize>) {
+    print!("[\n");
 
-    let mut vis_north = true;
+    for i in 0..array.num_rows() {
+        for j in 0..array.num_columns() {
+            let height = array.get(i, j).unwrap();
 
-    for i in 0..row {
-        // println!("Got: {:?}", *array.get(i, col).unwrap());
-
-        if *array.get(i, col).unwrap() >= height {
-            vis_north = false;
+            print!("{height}");
         }
+        println!("");
     }
 
-    let mut vis_south = true;
-    for i in row + 1..array.num_rows() {
-        // println!("Got: {:?}", *array.get(i, col).unwrap());
+    println!("]");
+}
 
-        if *array.get(i, col).unwrap() >= height {
-            vis_south = false;
+fn debug_array_bool(array: &Array2D<bool>) {
+    print!("[\n");
+
+    for i in 0..array.num_rows() {
+        for j in 0..array.num_columns() {
+            if *array.get(i, j).unwrap() {
+                print!("T");
+            } else {
+                print!("F");
+            }
         }
+        println!("");
     }
 
-    let mut vis_west = true;
-    for i in 0..col {
-        // println!("Got: {:?}", *array.get(row, i).unwrap());
-
-        if *array.get(row, i).unwrap() >= height {
-            vis_west = false;
-        }
-    }
-
-    let mut vis_east = true;
-    for i in col + 1..array.num_columns() {
-        // println!("Got: {:?}", *array.get(row, i).unwrap());
-
-        if *array.get(row, i).unwrap() >= height {
-            vis_east = false;
-        }
-    }
-
-    vis_north || vis_south || vis_east || vis_west
+    println!("]");
 }
 
 fn num_visible_trees(array: &Array2D<usize>, row: usize, col: usize) -> usize {
@@ -106,40 +95,100 @@ fn main() {
         })
         .collect();
 
-    let array = Array2D::from_rows(&v);
-
-    // println!("{:?}", is_visible(&array, 1, 1));
-    // println!("Visible {:?}", is_visible(&array, 1, 3));
-
-    // println!("Visible 2x1 {:?}", is_visible(&array, 2, 1));
-    // println!("Visible 2x2 {:?}", is_visible(&array, 2, 2));
+    let tree_heights = Array2D::from_rows(&v);
 
     // Part 1
     println!("Part 1");
 
-    let mut count = 0_usize;
+    let mut tree_visibility =
+        Array2D::filled_with(false, tree_heights.num_rows(), tree_heights.num_columns());
 
-    for i in 0..array.num_rows() {
-        for j in 0..array.num_columns() {
-            if is_visible(&array, i, j) {
-                count += 1;
+    for i in 0..tree_heights.num_columns() {
+        let mut max = -1;
+
+        for j in 0..tree_heights.num_rows() {
+            let height = *tree_heights.get(j, i).unwrap() as i128;
+
+            // println!("{j}x{i} height: {height} max: {max}");
+
+            if height > max {
+                tree_visibility.set(j, i, true);
             }
+
+            max = std::cmp::max(max, height);
         }
     }
 
-    println!("Answer part 1: {:?}", count);
+    for i in 0..tree_heights.num_columns() {
+        let mut max = -1;
+
+        for j in (0..tree_heights.num_rows()).rev() {
+            let height = *tree_heights.get(j, i).unwrap() as i128;
+
+            // println!("{j}x{i} height: {height} max: {max}");
+
+            if height > max {
+                tree_visibility.set(j, i, true);
+            }
+
+            max = std::cmp::max(max, height);
+        }
+    }
+
+    for i in 0..tree_heights.num_rows() {
+        let mut max = -1;
+
+        for j in 0..tree_heights.num_columns() {
+            let height = *tree_heights.get(i, j).unwrap() as i128;
+
+            if height > max {
+                tree_visibility.set(i, j, true);
+            }
+
+            max = std::cmp::max(max, height);
+        }
+    }
+
+    for i in 0..tree_heights.num_rows() {
+        let mut max = -1;
+
+        for j in (0..tree_heights.num_columns()).rev() {
+            let height = *tree_heights.get(i, j).unwrap() as i128;
+
+            if height > max {
+                tree_visibility.set(i, j, true);
+            }
+
+            max = std::cmp::max(max, height);
+        }
+    }
+
+    debug_array_usize(&tree_heights);
+
+    println!("Visibilities");
+
+    debug_array_bool(&tree_visibility);
+    // println!("{:?}", tree_visibility);
+
+    println!(
+        "Answer part 1: {:?}",
+        tree_visibility
+            .elements_row_major_iter()
+            .filter(|el| **el == true)
+            .count()
+    );
 
     // Part 2
-    println!("Part 2");
+    // println!("Part 2");
 
-    println!("Trees for 1x2, {}", num_visible_trees(&array, 1, 2));
-    println!("Trees for 3x2, {}", num_visible_trees(&array, 3, 2));
+    println!("Trees for 1x2, {}", num_visible_trees(&tree_heights, 1, 2));
+    println!("Trees for 3x2, {}", num_visible_trees(&tree_heights, 3, 2));
 
     let mut max_score = 0_usize;
 
-    for i in 0..array.num_rows() {
-        for j in 0..array.num_columns() {
-            let new_score = num_visible_trees(&array, i, j);
+    for i in 0..tree_heights.num_rows() {
+        for j in 0..tree_heights.num_columns() {
+            let new_score = num_visible_trees(&tree_heights, i, j);
 
             max_score = std::cmp::max(max_score, new_score);
         }
