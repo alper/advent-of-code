@@ -41,7 +41,7 @@ fn is_visible(array: &Array2D<usize>, row: usize, col: usize) -> bool {
         }
     }
 
-    return vis_north || vis_south || vis_east || vis_west;
+    vis_north || vis_south || vis_east || vis_west
 }
 
 fn num_visible_trees(array: &Array2D<usize>, row: usize, col: usize) -> usize {
@@ -141,9 +141,7 @@ fn main() {
         for j in 0..array.num_columns() {
             let new_score = num_visible_trees(&array, i, j);
 
-            if new_score > max_score {
-                max_score = new_score;
-            }
+            max_score = std::cmp::max(max_score, new_score);
         }
     }
 
