@@ -166,7 +166,6 @@ fn main() {
     // println!("{:?}", instructions);
 
     // Part 1
-    println!("Part 1");
 
     let mut v = VideoSystem {
         cycle: 1,
@@ -180,13 +179,13 @@ fn main() {
 
     v.run();
 
-    // for cs in v.crt.chunks(40) {
-    //     println!("{}", cs.iter().collect::<String>());
-    // }
+    println!("Answer part 1: {:?}", v.signal_strength_accumulator);
 
-    // println!("Answer part 1: {:?}", v.signal_strength_accumulator);
+    println!("Answer part 2");
 
-    // println!("Answer part 2: {:?}", "");
+    for cs in v.crt.chunks(40) {
+        println!("{}", cs.iter().collect::<String>());
+    }
 
     let elapsed = now.elapsed();
     println!("Elapsed: {:.2?}", elapsed);
