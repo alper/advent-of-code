@@ -189,6 +189,8 @@ fn render_snake(snake: [Pos; 10]) {
 }
 
 fn main() {
+    // TODO
+    // if yes, then *tail = std::array::from_fn(|i| tail[i] + (head[i] - tail[i]).signum())
     let input = fs::read_to_string("full_input.txt").expect("File not readable");
 
     // Part 1
