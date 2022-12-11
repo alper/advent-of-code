@@ -5,18 +5,18 @@ use itertools::Itertools;
 
 #[derive(Debug, Clone, Copy)]
 enum Operation {
-    Times(u128),
+    Times(usize),
     Square,
-    Add(u128),
+    Add(usize),
 }
 
 struct Monkey {
-    items: VecDeque<u128>,
+    items: VecDeque<usize>,
     operation: Operation,
-    test_div: u128,
-    true_target: u128,
-    false_target: u128,
-    lcm: u128,
+    test_div: usize,
+    true_target: usize,
+    false_target: usize,
+    lcm: usize,
 }
 
 impl fmt::Debug for Monkey {
