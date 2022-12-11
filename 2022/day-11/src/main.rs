@@ -1,21 +1,62 @@
-use std::{collections::VecDeque, fs};
+use core::fmt;
+use std::{collections::VecDeque, fmt::write, fs};
 
 use itertools::Itertools;
 
 #[derive(Debug, Clone, Copy)]
 enum Operation {
-    Times(usize),
+    Times(u128),
     Square,
-    Add(usize),
+    Add(u128),
 }
 
-#[derive(Debug)]
 struct Monkey {
-    items: VecDeque<usize>,
+    items: VecDeque<u128>,
     operation: Operation,
-    test_div: usize,
-    true_target: usize,
-    false_target: usize,
+    test_div: u128,
+    true_target: u128,
+    false_target: u128,
+}
+
+impl fmt::Debug for Monkey {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Monkey X: ");
+
+        write!(f, "{}", self.items.iter().join(", "))
+    }
+}
+
+fn get_test_monkeys() -> [Monkey; 4] {
+    [
+        Monkey {
+            items: VecDeque::from([79, 98]),
+            operation: Operation::Times(19),
+            test_div: 23,
+            true_target: 2,
+            false_target: 3,
+        },
+        Monkey {
+            items: VecDeque::from([54, 65, 75, 74]),
+            operation: Operation::Add(6),
+            test_div: 19,
+            true_target: 2,
+            false_target: 0,
+        },
+        Monkey {
+            items: VecDeque::from([79, 60, 97]),
+            operation: Operation::Square,
+            test_div: 13,
+            true_target: 1,
+            false_target: 3,
+        },
+        Monkey {
+            items: VecDeque::from([74]),
+            operation: Operation::Add(3),
+            test_div: 17,
+            true_target: 0,
+            false_target: 1,
+        },
+    ]
 }
 
 fn get_monkeys() -> [Monkey; 8] {
@@ -80,16 +121,22 @@ fn get_monkeys() -> [Monkey; 8] {
 }
 
 fn main() {
-    let mut monkeys = get_monkeys();
+    // Part 1
+    let mut monkeys = get_test_monkeys();
 
     println!("{:?}", monkeys);
 
-    // Part 1
     println!("Part 1");
     let mut inspections = [0; 8];
 
-    for _ in 0..20 {
-        for i in 0..8 {
+    for round in 0..20 {
+        println!("After round: {}", round);
+        for monkey in monkeys.iter() {
+            println!("{:?}", monkey);
+        }
+        println!("");
+
+        for i in 0..monkeys.len() {
             let mut monkey_items = monkeys[i].items.clone();
             monkeys.get_mut(i).unwrap().items.clear();
 
@@ -143,5 +190,67 @@ fn main() {
     // Part 2
     println!("Part 2");
 
-    println!("Answer part 2: {:?}", "");
+    let mut monkeys = get_test_monkeys();
+
+    println!("{:?}", monkeys);
+
+    let mut inspections = [0; 8];
+
+    for round in 0..10000 {
+        if round == 1 || round == 20 || round == 1000 || round == 2000 {
+            println!("Round: {round}");
+            println!("Inspections: {:?}", inspections);
+        }
+
+        for i in 0..monkeys.len() {
+            let mut monkey_items = monkeys[i].items.clone();
+            monkeys.get_mut(i).unwrap().items.clear();
+
+            let operation = monkeys.get(i).unwrap().operation;
+            let test_div = monkeys.get(i).unwrap().test_div;
+            let true_target = monkeys.get(i).unwrap().true_target;
+            let false_target = monkeys.get(i).unwrap().false_target;
+
+            loop {
+                match monkey_items.pop_front() {
+                    Some(item) => {
+                        let after_inspection = match operation {
+                            Operation::Times(x) => item * x,
+                            Operation::Square => item * item,
+                            Operation::Add(x) => item + x,
+                        };
+                        // Count the inspection
+                        inspections[i] += 1;
+
+                        if after_inspection % test_div == 0 {
+                            monkeys
+                                .get_mut(true_target as usize)
+                                .unwrap()
+                                .items
+                                .push_back(after_inspection)
+                        } else {
+                            monkeys
+                                .get_mut(false_target as usize)
+                                .unwrap()
+                                .items
+                                .push_back(after_inspection)
+                        }
+                    }
+                    None => break,
+                }
+            }
+        }
+    }
+
+    println!("Inspections: {:?}", inspections);
+
+    println!(
+        "Answer part 2: {:?}",
+        inspections
+            .iter()
+            .sorted()
+            .rev()
+            .take(2)
+            .fold(1_u128, |acc, el| acc * el)
+    );
 }
