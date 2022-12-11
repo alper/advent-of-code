@@ -16,6 +16,7 @@ struct Monkey {
     test_div: u128,
     true_target: u128,
     false_target: u128,
+    lcm: u128,
 }
 
 impl fmt::Debug for Monkey {
@@ -34,6 +35,7 @@ fn get_test_monkeys() -> [Monkey; 4] {
             test_div: 23,
             true_target: 2,
             false_target: 3,
+            lcm: 96577,
         },
         Monkey {
             items: VecDeque::from([54, 65, 75, 74]),
@@ -41,6 +43,7 @@ fn get_test_monkeys() -> [Monkey; 4] {
             test_div: 19,
             true_target: 2,
             false_target: 0,
+            lcm: 96577,
         },
         Monkey {
             items: VecDeque::from([79, 60, 97]),
@@ -48,6 +51,7 @@ fn get_test_monkeys() -> [Monkey; 4] {
             test_div: 13,
             true_target: 1,
             false_target: 3,
+            lcm: 96577,
         },
         Monkey {
             items: VecDeque::from([74]),
@@ -55,6 +59,7 @@ fn get_test_monkeys() -> [Monkey; 4] {
             test_div: 17,
             true_target: 0,
             false_target: 1,
+            lcm: 96577,
         },
     ]
 }
@@ -67,6 +72,7 @@ fn get_monkeys() -> [Monkey; 8] {
             test_div: 19,
             true_target: 6,
             false_target: 4,
+            lcm: 9699690,
         },
         Monkey {
             items: VecDeque::from([76, 97, 58, 72, 57, 92, 82]),
@@ -74,6 +80,7 @@ fn get_monkeys() -> [Monkey; 8] {
             test_div: 3,
             true_target: 7,
             false_target: 5,
+            lcm: 9699690,
         },
         Monkey {
             items: VecDeque::from([90, 89, 96]),
@@ -81,6 +88,7 @@ fn get_monkeys() -> [Monkey; 8] {
             test_div: 13,
             true_target: 5,
             false_target: 1,
+            lcm: 9699690,
         },
         Monkey {
             items: VecDeque::from([72, 63, 72, 99]),
@@ -88,6 +96,7 @@ fn get_monkeys() -> [Monkey; 8] {
             test_div: 17,
             true_target: 0,
             false_target: 4,
+            lcm: 9699690,
         },
         Monkey {
             items: VecDeque::from([65]),
@@ -95,6 +104,7 @@ fn get_monkeys() -> [Monkey; 8] {
             test_div: 2,
             true_target: 6,
             false_target: 2,
+            lcm: 9699690,
         },
         Monkey {
             items: VecDeque::from([97, 71]),
@@ -102,6 +112,7 @@ fn get_monkeys() -> [Monkey; 8] {
             test_div: 11,
             true_target: 7,
             false_target: 3,
+            lcm: 9699690,
         },
         Monkey {
             items: VecDeque::from([83, 68, 88, 55, 87, 67]),
@@ -109,6 +120,7 @@ fn get_monkeys() -> [Monkey; 8] {
             test_div: 5,
             true_target: 2,
             false_target: 1,
+            lcm: 9699690,
         },
         Monkey {
             items: VecDeque::from([64, 81, 50, 96, 82, 53, 62, 92]),
@@ -116,13 +128,17 @@ fn get_monkeys() -> [Monkey; 8] {
             test_div: 7,
             true_target: 3,
             false_target: 0,
+            lcm: 9699690,
         },
     ]
 }
 
 fn main() {
+    use std::time::Instant;
+    let now = Instant::now();
+
     // Part 1
-    let mut monkeys = get_test_monkeys();
+    let mut monkeys = get_monkeys();
 
     println!("{:?}", monkeys);
 
@@ -190,7 +206,7 @@ fn main() {
     // Part 2
     println!("Part 2");
 
-    let mut monkeys = get_test_monkeys();
+    let mut monkeys = get_monkeys();
 
     println!("{:?}", monkeys);
 
@@ -210,6 +226,7 @@ fn main() {
             let test_div = monkeys.get(i).unwrap().test_div;
             let true_target = monkeys.get(i).unwrap().true_target;
             let false_target = monkeys.get(i).unwrap().false_target;
+            let lcm = monkeys.get(i).unwrap().lcm;
 
             loop {
                 match monkey_items.pop_front() {
@@ -227,13 +244,13 @@ fn main() {
                                 .get_mut(true_target as usize)
                                 .unwrap()
                                 .items
-                                .push_back(after_inspection)
+                                .push_back(after_inspection % lcm)
                         } else {
                             monkeys
                                 .get_mut(false_target as usize)
                                 .unwrap()
                                 .items
-                                .push_back(after_inspection)
+                                .push_back(after_inspection % lcm)
                         }
                     }
                     None => break,
@@ -253,4 +270,7 @@ fn main() {
             .take(2)
             .fold(1_u128, |acc, el| acc * el)
     );
+
+    let elapsed = now.elapsed();
+    println!("Elapsed: {:.2?}", elapsed);
 }
