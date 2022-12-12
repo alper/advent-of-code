@@ -1,5 +1,5 @@
 use core::fmt;
-use std::{collections::VecDeque, fmt::write, fs};
+use std::collections::VecDeque;
 
 use itertools::Itertools;
 
@@ -21,7 +21,7 @@ struct Monkey {
 
 impl fmt::Debug for Monkey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Monkey X: ");
+        write!(f, "Monkey X: ")?;
 
         write!(f, "{}", self.items.iter().join(", "))
     }
@@ -150,7 +150,7 @@ fn main() {
         for monkey in monkeys.iter() {
             println!("{:?}", monkey);
         }
-        println!("");
+        println!();
 
         for i in 0..monkeys.len() {
             let mut monkey_items = monkeys[i].items.clone();
@@ -161,33 +161,28 @@ fn main() {
             let true_target = monkeys.get(i).unwrap().true_target;
             let false_target = monkeys.get(i).unwrap().false_target;
 
-            loop {
-                match monkey_items.pop_front() {
-                    Some(item) => {
-                        let after_inspection = match operation {
-                            Operation::Times(x) => item * x,
-                            Operation::Square => item * item,
-                            Operation::Add(x) => item + x,
-                        };
-                        // Count the inspection
-                        inspections[i] += 1;
+            while let Some(item) = monkey_items.pop_front() {
+                let after_inspection = match operation {
+                    Operation::Times(x) => item * x,
+                    Operation::Square => item * item,
+                    Operation::Add(x) => item + x,
+                };
+                // Count the inspection
+                inspections[i] += 1;
 
-                        let reduced_worry = after_inspection / 3;
-                        if reduced_worry % test_div == 0 {
-                            monkeys
-                                .get_mut(true_target as usize)
-                                .unwrap()
-                                .items
-                                .push_back(reduced_worry)
-                        } else {
-                            monkeys
-                                .get_mut(false_target as usize)
-                                .unwrap()
-                                .items
-                                .push_back(reduced_worry)
-                        }
-                    }
-                    None => break,
+                let reduced_worry = after_inspection / 3;
+                if reduced_worry % test_div == 0 {
+                    monkeys
+                        .get_mut(true_target)
+                        .unwrap()
+                        .items
+                        .push_back(reduced_worry)
+                } else {
+                    monkeys
+                        .get_mut(false_target)
+                        .unwrap()
+                        .items
+                        .push_back(reduced_worry)
                 }
             }
         }
@@ -195,12 +190,7 @@ fn main() {
 
     println!(
         "Answer part 1: {:?}",
-        inspections
-            .iter()
-            .sorted()
-            .rev()
-            .take(2)
-            .fold(1, |acc, el| acc * el)
+        inspections.iter().sorted().rev().take(2).product::<usize>()
     );
 
     // Part 2
@@ -241,13 +231,13 @@ fn main() {
 
                         if after_inspection % test_div == 0 {
                             monkeys
-                                .get_mut(true_target as usize)
+                                .get_mut(true_target)
                                 .unwrap()
                                 .items
                                 .push_back(after_inspection % lcm)
                         } else {
                             monkeys
-                                .get_mut(false_target as usize)
+                                .get_mut(false_target)
                                 .unwrap()
                                 .items
                                 .push_back(after_inspection % lcm)
@@ -263,12 +253,7 @@ fn main() {
 
     println!(
         "Answer part 2: {:?}",
-        inspections
-            .iter()
-            .sorted()
-            .rev()
-            .take(2)
-            .fold(1_u128, |acc, el| acc * el)
+        inspections.iter().sorted().rev().take(2).product::<usize>()
     );
 
     let elapsed = now.elapsed();
