@@ -1,5 +1,4 @@
 use array2d::{self, Array2D};
-use itertools::Itertools;
 use pathfinding::prelude::dijkstra;
 use std::fs;
 
@@ -58,10 +57,7 @@ fn path_length(array: &Array2D<u32>, from: (usize, usize), to: (usize, usize)) -
                 }
             }
 
-            // println!("Found: {:?}", result);
-            // println!();
-
-            return result.into_iter().map(|p| (p, 1));
+            result.into_iter().map(|p| (p, 1))
         },
         |&p| p == to,
     ) {
@@ -82,7 +78,10 @@ fn array_find(array: &Array2D<u32>, needle: u32) -> (usize, usize) {
 }
 
 fn main() {
-    let input = fs::read_to_string("test_input.txt").expect("File not readable");
+    use std::time::Instant;
+    let now = Instant::now();
+
+    let input = fs::read_to_string("full_input.txt").expect("File not readable");
 
     let v: Vec<_> = input
         .lines()
@@ -98,9 +97,9 @@ fn main() {
         .collect();
     let array = Array2D::from_rows(&v);
 
-    let mut visited = Array2D::filled_with(false, array.num_rows(), array.num_columns());
+    // let mut visited = Array2D::filled_with(false, array.num_rows(), array.num_columns());
 
-    print_array(&array);
+    // print_array(&array);
 
     let start = array_find(&array, 0);
     let goal = array_find(&array, 27);
@@ -111,60 +110,58 @@ fn main() {
     // Part 1
     println!("Part 1");
 
-    let result = dijkstra(
-        &start,
-        |&(x, y)| {
-            visited.set(x, y, true);
+    println!(
+        "Answer part 1: {:?}",
+        path_length(&array, start, goal).unwrap() - 1
+    );
 
+    // Part 2
+    println!("Part 2");
+
+    let rev_path = dijkstra(
+        &goal,
+        |&(x, y)| {
             let mut result = vec![];
             let current_height = *array.get(x, y).unwrap();
 
-            // println!("Successors for: {x} {y} at {current_height}");
-
+            // Reverse search
+            // Current-height can be
+            // 1. the same as next steps
+            // 2. arbitrarily lower
+            // 2. the same as next space+1
             if x > 0 {
                 if let Some(n) = array.get(x - 1, y) {
-                    if current_height == *n || current_height > *n || current_height + 1 == *n {
+                    if current_height == *n || current_height < *n || current_height == *n + 1 {
                         result.push((x - 1, y))
                     }
                 }
             }
 
             if let Some(n) = array.get(x + 1, y) {
-                if current_height == *n || current_height + 1 == *n || current_height > *n {
+                if current_height == *n || current_height < *n || current_height == *n + 1 {
                     result.push((x + 1, y))
                 }
             }
             if y > 0 {
                 if let Some(n) = array.get(x, y - 1) {
-                    if current_height == *n || current_height + 1 == *n || current_height > *n {
+                    if current_height == *n || current_height < *n || current_height == *n + 1 {
                         result.push((x, y - 1))
                     }
                 }
             }
             if let Some(n) = array.get(x, y + 1) {
-                if current_height == *n || current_height + 1 == *n || current_height > *n {
+                if current_height == *n || current_height < *n || current_height == *n + 1 {
                     result.push((x, y + 1))
                 }
             }
 
-            // println!("Found: {:?}", result);
-            // println!();
-
-            return result.into_iter().map(|p| (p, 1));
+            result.into_iter().map(|p| (p, 1))
         },
-        |&p| p == goal,
+        |&(x, y)| *array.get(x, y).unwrap() == 1,
     );
 
-    print_visited_array(&visited);
+    println!("Answer part 2: {:?}", rev_path.unwrap().0.len() - 1);
 
-    println!("Answer part 1: {:?}", result.unwrap().0.len() - 1);
-
-    // Part 2
-    println!("Part 2");
-
-    let candidates = (0..(array.num_rows()))
-        .cartesian_product(0..(array.num_columns()))
-        .filter(|&(x, y)| *array.get(x, y).unwrap() == 1);
-
-    println!("Answer part 2: {:?}", candidates.collect::<Vec<_>>());
+    let elapsed = now.elapsed();
+    println!("Elapsed: {:.2?}", elapsed);
 }
