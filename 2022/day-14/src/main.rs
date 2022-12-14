@@ -33,16 +33,16 @@ fn print_array(array: &Array2D<char>) {
 }
 
 fn generated_path(start: (usize, usize), end: (usize, usize)) -> Vec<(usize, usize)> {
-    println!("Genrate for: {:?} {:?}", start, end);
+    // println!("Genrate for: {:?} {:?}", start, end);
 
     if start.0 == end.0 {
-        return (min(start.1, end.1)..(max(start.1, end.1) + 1))
+        (min(start.1, end.1)..(max(start.1, end.1) + 1))
             .map(|y| (start.0, y))
-            .collect();
+            .collect()
     } else {
-        return (min(start.0, end.0)..(max(start.0, end.0)) + 1)
+        (min(start.0, end.0)..(max(start.0, end.0)) + 1)
             .map(|x| (x, start.1))
-            .collect();
+            .collect()
     }
 }
 
@@ -50,8 +50,6 @@ fn drop_sand(array: &Array2D<char>, sand_start: (usize, usize)) -> Option<(usize
     let mut sand_pos = sand_start;
 
     loop {
-        let mut candidate_pos = (sand_pos.1 + 1, sand_pos.0);
-
         match array.get(sand_pos.1 + 1, sand_pos.0) {
             Some('.') => {
                 sand_pos = (sand_pos.0, sand_pos.1 + 1);
@@ -114,8 +112,8 @@ fn main() {
 
     let start_x = min_x - 5;
 
-    println!("{:?}", rocks);
-    println!("X {min_x}-{max_x}, Y {min_y}-{max_y}");
+    // println!("{:?}", rocks);
+    // println!("X {min_x}-{max_x}, Y {min_y}-{max_y}");
 
     // Part 1
     println!("Part 1");
@@ -131,7 +129,7 @@ fn main() {
         for segment in segments {
             let path_segment = generated_path(segment[0], segment[1]);
 
-            println!("Segment: {:?}", path_segment);
+            // println!("Segment: {:?}", path_segment);
 
             for point in path_segment {
                 let _ = array_part1.set(point.1, point.0 - start_x, '#');
@@ -147,7 +145,7 @@ fn main() {
         let _ = array_part1.set(end_pos.1, end_pos.0, '#');
     }
 
-    print_array(&array_part1);
+    // print_array(&array_part1);
 
     println!("Answer part 1: {:?}", counter);
 
@@ -170,15 +168,15 @@ fn main() {
         for segment in segments {
             let path_segment = generated_path(segment[0], segment[1]);
 
-            println!("Segment: {:?}", path_segment);
+            // println!("Segment: {:?}", path_segment);
 
             for point in path_segment {
                 let _ = array_part2.set(point.1, point.0, '#');
             }
         }
     }
-    println!("Array ready");
-    print_array(&array_part2);
+    // println!("Array ready");
+    // print_array(&array_part2);
 
     let mut counter2 = 0;
 
@@ -191,8 +189,8 @@ fn main() {
         let _ = array_part2.set(end_pos.1, end_pos.0, '#');
     }
 
-    println!("Array done");
-    print_array(&array_part2);
+    // println!("Array done");
+    // print_array(&array_part2);
 
     println!("Answer part 2: {:?}", counter2 + 1);
 
