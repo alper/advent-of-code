@@ -77,7 +77,7 @@ fn main() {
     use std::time::Instant;
     let now = Instant::now();
 
-    let full = true;
+    let full = false;
 
     let input = if full {
         fs::read_to_string("full_input.txt").expect("File not readable")
@@ -117,32 +117,6 @@ fn main() {
         .filter(|&p| p)
         .count();
 
-    // println!("Points in range {}", points_in_range);
-
-    // for candidate_x in candidate_x_range {
-    //     let candidate_point = Point {
-    //         x: candidate_x,
-    //         y: candidate_y,
-    //     };
-    //     // println!("Candidate point: {}", candidate_point);
-    //     let mut covered = false;
-
-    //     for (sensor, beacon) in &sensor_beacons {
-    //         if in_range(*sensor, *beacon, candidate_point)
-    //             && sensor_beacons
-    //                 .iter()
-    //                 .filter(|&(s, b)| *s == candidate_point || *b == candidate_point)
-    //                 .count()
-    //                 == 0
-    //         {
-    //             covered = true;
-    //             covered_count += 1;
-    //             break;
-    //         }
-    //     }
-    //     println!("Location: {} is covered: {}", candidate_point, covered);
-    // }
-
     println!("Answer part 1: {:?}", points_in_range);
 
     // Part 2
@@ -154,37 +128,54 @@ fn main() {
     let candidate_y_range = if full { 0..4_000_001isize } else { 0..21isize };
     let candidate_x_range = if full { 0..4_000_001isize } else { 0..21isize };
 
-    let candidate_points =
-        candidate_x_range
-            .cartesian_product(candidate_y_range)
-            .map(|(candidate_x, candidate_y)| Point {
-                x: candidate_x,
-                y: candidate_y,
-            });
+    candidate_x_range
+        .cartesian_product(candidate_y_range)
+        .map(|(candidate_x, candidate_y)| Point {
+            x: candidate_x,
+            y: candidate_y,
+        })
+        .map(|point| {
+            println!("Point: {}", point);
+            if point.x % 100000 == 0 && point.y % 100000 == 0 {}
 
-    for candidate in candidate_points {
-        if candidate.y % 100_000 == 0 {
-            println!("Trying out candidate: {}", candidate)
-        }
-        let mut point_free = true;
+            sensor_beacons.iter().any(move |(sensor, beacon)| {
+                in_range(*sensor, *beacon, point) && *sensor != point && *beacon != point
+            })
+        })
+        .filter(|&p| p)
+        .count();
 
-        for (sensor, beacon) in &sensor_beacons {
-            // Check whether a sensor or beacon coincides with the point
-            if *sensor == candidate || *beacon == candidate {
-                point_free = false;
-            }
+    // let candidate_points =
+    //     candidate_x_range
+    //         .cartesian_product(candidate_y_range)
+    //         .map(|(candidate_x, candidate_y)| Point {
+    //             x: candidate_x,
+    //             y: candidate_y,
+    //         });
 
-            // Check whether the sensor can see the point
-            if in_range(*sensor, *beacon, candidate) {
-                point_free = false;
-            }
-        }
+    // for candidate in candidate_points {
+    //     if candidate.y % 100_000 == 0 {
+    //         println!("Trying out candidate: {}", candidate)
+    //     }
+    //     let mut point_free = true;
 
-        if point_free {
-            println!("Point {} is free", candidate);
-            println!("Answer part 2: {:?}", candidate.x * 4_000_000 + candidate.y);
-        }
-    }
+    //     for (sensor, beacon) in &sensor_beacons {
+    //         // Check whether a sensor or beacon coincides with the point
+    //         if *sensor == candidate || *beacon == candidate {
+    //             point_free = false;
+    //         }
+
+    //         // Check whether the sensor can see the point
+    //         if in_range(*sensor, *beacon, candidate) {
+    //             point_free = false;
+    //         }
+    //     }
+
+    //     if point_free {
+    //         println!("Point {} is free", candidate);
+    //         println!("Answer part 2: {:?}", candidate.x * 4_000_000 + candidate.y);
+    //     }
+    // }
 
     let elapsed = now.elapsed();
     println!("Elapsed: {:.2?}", elapsed);
