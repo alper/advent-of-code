@@ -102,31 +102,48 @@ fn main() {
     };
     let mut covered_count = 0;
 
-    for candidate_x in candidate_x_range {
-        let candidate_point = Point {
+    let points_in_range = candidate_x_range
+        .clone()
+        .into_par_iter()
+        .map(|candidate_x| Point {
             x: candidate_x,
             y: candidate_y,
-        };
-        // println!("Candidate point: {}", candidate_point);
-        let mut covered = false;
+        })
+        .map(|point| {
+            sensor_beacons.iter().any(move |(sensor, beacon)| {
+                in_range(*sensor, *beacon, point) && *sensor != point && *beacon != point
+            })
+        })
+        .filter(|&p| p)
+        .count();
 
-        for (sensor, beacon) in &sensor_beacons {
-            if in_range(*sensor, *beacon, candidate_point)
-                && sensor_beacons
-                    .iter()
-                    .filter(|&(s, b)| *s == candidate_point || *b == candidate_point)
-                    .count()
-                    == 0
-            {
-                covered = true;
-                covered_count += 1;
-                break;
-            }
-        }
-        // println!("Location: {} is covered: {}", candidate_point, covered);
-    }
+    // println!("Points in range {}", points_in_range);
 
-    println!("Answer part 1: {:?}", covered_count);
+    // for candidate_x in candidate_x_range {
+    //     let candidate_point = Point {
+    //         x: candidate_x,
+    //         y: candidate_y,
+    //     };
+    //     // println!("Candidate point: {}", candidate_point);
+    //     let mut covered = false;
+
+    //     for (sensor, beacon) in &sensor_beacons {
+    //         if in_range(*sensor, *beacon, candidate_point)
+    //             && sensor_beacons
+    //                 .iter()
+    //                 .filter(|&(s, b)| *s == candidate_point || *b == candidate_point)
+    //                 .count()
+    //                 == 0
+    //         {
+    //             covered = true;
+    //             covered_count += 1;
+    //             break;
+    //         }
+    //     }
+    //     println!("Location: {} is covered: {}", candidate_point, covered);
+    // }
+
+    println!("Answer part 1: {:?}", points_in_range);
 
     // Part 2
     println!("Part 2");
