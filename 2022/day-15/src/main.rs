@@ -1,6 +1,12 @@
-use std::{fmt::Display, fs, str::FromStr};
+use std::{
+    cmp::{max, min},
+    collections::VecDeque,
+    fmt::Display,
+    fs,
+    ops::Range,
+    str::FromStr,
+};
 
-use itertools::Itertools;
 use nom::{
     bytes::complete::tag,
     character::complete::digit1,
@@ -45,22 +51,22 @@ fn parse_line(input: &str) -> IResult<&str, (Point, Point)> {
     Ok((i, (Point { x: sx, y: sy }, Point { x: bx, y: by })))
 }
 
-fn dist(p1: Point, p2: Point) -> isize {
+fn dist(p1: &Point, p2: &Point) -> isize {
     (p1.x - p2.x).abs() + (p1.y - p2.y).abs()
 }
 
-fn normalize(p1: Point, p2: Point) -> Point {
+fn normalize(p1: &Point, p2: &Point) -> Point {
     Point {
         x: p2.x - p1.x,
         y: p2.y - p1.y,
     }
 }
 
-fn in_origin_ball(dist: isize, point: Point) -> bool {
+fn in_origin_ball(dist: isize, point: &Point) -> bool {
     point.x.abs() + point.y.abs() <= dist
 }
 
-fn in_range(sensor: Point, beacon: Point, location: Point) -> bool {
+fn in_range(sensor: &Point, beacon: &Point, location: &Point) -> bool {
     // println!("In range: {} -> {} / {}", sensor, beacon, location);
     // let origin = Point { x: 0, y: 0 };
     // let normalized_beacon = normalize(sensor, beacon);
@@ -70,14 +76,68 @@ fn in_range(sensor: Point, beacon: Point, location: Point) -> bool {
     // println!("Normalized: {} {}", normalized_beacon, normalized_location);
     // println!("Distance: {}", dist);
 
-    in_origin_ball(dist, normalized_location)
+    in_origin_ball(dist, &normalized_location)
+}
+
+fn get_ranges(
+    y: isize,
+    x_range: &Range<isize>,
+    sensor_beacons: &Vec<(Point, Point)>,
+) -> Vec<(isize, isize)> {
+    let mut ranges = vec![];
+
+    for (sensor, beacon) in sensor_beacons {
+        let distance = dist(sensor, beacon);
+
+        let distanceToSensor = (y - sensor.y).abs();
+        let offset_x = distance - distanceToSensor;
+        let width = max(offset_x * 2 + 1, 0);
+
+        if width > 0 {
+            let from = sensor.x - offset_x;
+            let to = sensor.x + offset_x;
+
+            if to >= x_range.start && from <= x_range.end {
+                ranges.push((max(x_range.start, from), min(x_range.end, to)));
+            }
+        }
+    }
+    ranges.sort();
+
+    ranges
+}
+
+fn merge_ranges(ranges: &Vec<(isize, isize)>) -> Vec<(isize, isize)> {
+    let mut ranges = VecDeque::from(ranges.clone());
+    let mut merged = VecDeque::new();
+
+    merged.push_back(ranges.pop_front().unwrap());
+
+    for (next_from, next_to) in ranges {
+        let (prev_from, mut prev_to) = merged.pop_back().unwrap();
+
+        if next_from <= prev_to && next_to <= prev_to {
+            // Do nothing since it's entirely in
+
+            merged.push_back((prev_from, prev_to));
+        } else if next_from <= prev_to + 1 {
+            merged.push_back((prev_from, max(prev_to, next_to)));
+        } else {
+            merged.push_back((prev_from, prev_to));
+            merged.push_back((next_from, next_to));
+        }
+
+        // println!("Merged: {:?}", merged);
+    }
+
+    merged.into()
 }
 
 fn main() {
     use std::time::Instant;
     let now = Instant::now();
 
-    let full = false;
+    let full = true;
 
     let input = if full {
         fs::read_to_string("full_input.txt").expect("File not readable")
@@ -100,7 +160,6 @@ fn main() {
     } else {
         -10..30isize
     };
-    let mut covered_count = 0;
 
     let points_in_range = candidate_x_range
         .clone()
@@ -111,7 +170,7 @@ fn main() {
         })
         .map(|point| {
             sensor_beacons.iter().any(move |(sensor, beacon)| {
-                in_range(*sensor, *beacon, point) && *sensor != point && *beacon != point
+                in_range(sensor, beacon, &point) && *sensor != point && *beacon != point
             })
         })
         .filter(|&p| p)
@@ -128,54 +187,16 @@ fn main() {
     let candidate_y_range = if full { 0..4_000_001isize } else { 0..21isize };
     let candidate_x_range = if full { 0..4_000_001isize } else { 0..21isize };
 
-    candidate_x_range
-        .cartesian_product(candidate_y_range)
-        .map(|(candidate_x, candidate_y)| Point {
-            x: candidate_x,
-            y: candidate_y,
-        })
-        .map(|point| {
-            println!("Point: {}", point);
-            if point.x % 100000 == 0 && point.y % 100000 == 0 {}
+    for y in candidate_y_range {
+        let ranges = get_ranges(y, &candidate_x_range, &sensor_beacons);
+        let merged = merge_ranges(&ranges);
 
-            sensor_beacons.iter().any(move |(sensor, beacon)| {
-                in_range(*sensor, *beacon, point) && *sensor != point && *beacon != point
-            })
-        })
-        .filter(|&p| p)
-        .count();
-
-    // let candidate_points =
-    //     candidate_x_range
-    //         .cartesian_product(candidate_y_range)
-    //         .map(|(candidate_x, candidate_y)| Point {
-    //             x: candidate_x,
-    //             y: candidate_y,
-    //         });
-
-    // for candidate in candidate_points {
-    //     if candidate.y % 100_000 == 0 {
-    //         println!("Trying out candidate: {}", candidate)
-    //     }
-    //     let mut point_free = true;
-
-    //     for (sensor, beacon) in &sensor_beacons {
-    //         // Check whether a sensor or beacon coincides with the point
-    //         if *sensor == candidate || *beacon == candidate {
-    //             point_free = false;
-    //         }
-
-    //         // Check whether the sensor can see the point
-    //         if in_range(*sensor, *beacon, candidate) {
-    //             point_free = false;
-    //         }
-    //     }
-
-    //     if point_free {
-    //         println!("Point {} is free", candidate);
-    //         println!("Answer part 2: {:?}", candidate.x * 4_000_000 + candidate.y);
-    //     }
-    // }
+        if merged.len() == 2 {
+            println!("Merged: {:?}", merged);
+            let x = merged.first().unwrap().1 + 1;
+            println!("Answer part 2: {:?}", 4000000 * x + y);
+        }
+    }
 
     let elapsed = now.elapsed();
     println!("Elapsed: {:.2?}", elapsed);
