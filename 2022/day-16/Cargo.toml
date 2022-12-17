@@ -12,6 +12,7 @@ rayon = "1.6.1"
 # toodee = "0.3.0"
 pathfinding = "4.0.0"
 cached = "0.41.0"
+memoize = "0.3.3"
 
 [dev-dependencies]
 test-case = "2.2.2"

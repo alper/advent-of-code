@@ -1,4 +1,5 @@
 use cached::proc_macro::cached;
+use cached::SizedCache;
 use itertools::Itertools;
 use nom::{
     branch::alt,
@@ -54,6 +55,11 @@ fn parse_line(input: &str) -> IResult<&str, Valve> {
     ))
 }
 
+#[cached(
+    type = "SizedCache<String, usize>",
+    create = "{ SizedCache::with_size(100) }",
+    convert = r#"{ format!("{}-{}-{}", cur, opened.join(""), min_left) }"#
+)]
 fn max_flow(
     cur: &str,
     flows: &BTreeMap<&str, usize>,
@@ -65,7 +71,9 @@ fn max_flow(
         return 0;
     }
 
-    println!("Opened: {:?} minutes left: {}", opened, min_left);
+    // if (min_left % 5 == 0) {
+    // println!("Opened: {:?} minutes left: {}", opened, min_left);
+    // }
 
     let mut best = 0;
 
