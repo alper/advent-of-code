@@ -67,6 +67,8 @@ fn max_flow(
     opened: &Vec<&str>,
     min_left: usize,
 ) -> usize {
+    // From: https://github.com/nthistle/advent-of-code/blob/master/2022/day16/day16.py#L23
+    // Kinda works but doesn't
     if min_left <= 0 {
         return 0;
     }
@@ -98,73 +100,63 @@ fn max_flow(
     best
 }
 
-fn score_pathway(
-    perm: &Vec<&str>,
-    flows: &BTreeMap<&str, usize>,
-    dist: &BTreeMap<(&str, &str), usize>,
-) -> usize {
-    let mut perm = VecDeque::from(perm.clone());
-    perm.push_front("AA");
+fn solve(flows: &BTreeMap<&str, usize>, adj: &BTreeMap<&str, Vec<&str>>) -> isize {
+    let mut states = VecDeque::from(vec![(1, "AA", 0isize, BTreeSet::from([]))]);
+    let mut seen: BTreeMap<(usize, &str), isize> = BTreeMap::new();
+    let mut best = 0;
+    // Taken from: https://github.com/carrdelling/AdventOfCode2022/blob/main/day16/silver.py#L3
+    // Still doesn't give the right answer.
+    // But fuck this.
 
-    // let mut current_pos = "AA".to_owned();
+    while let Some((time, location, score, opened_s)) = states.pop_front() {
+        println!("{} {} {} {:?}", time, location, score, opened_s);
 
-    let path_cost = perm
-        .iter()
-        .tuple_windows::<(_, _)>()
-        .map(|(a, b)| dist.get(&(*a, *b)).unwrap())
-        .sum::<usize>();
+        let mut opened = opened_s.clone();
 
-    println!("Perm: {:?}, path cost: {}", perm, path_cost + perm.len());
-    return 0;
+        if seen.get(&(time, location)).map_or(-1, |&s| s) >= score {
+            continue;
+        }
+        seen.insert((time, location), score);
 
-    let mut total_pressure = 0;
-    let mut open_flows: Vec<usize> = Vec::new();
-    let mut minutes = 0;
+        if time == 30 {
+            best = max(best, score);
+            continue;
+        }
 
-    // while let Some(next_pos) = perm.pop_front() {
-    //     // println!("Next pos: {}", next_pos);
-    //     // println!("Open flows: {:?}", open_flows);
+        if *flows.get(location).unwrap() > 0 && !opened.contains(&location) {
+            opened.insert(location);
+            let new_score: isize = score
+                + opened
+                    .iter()
+                    .map(|&l| flows.get(&l).map_or(0, |v| *v) as isize)
+                    .sum::<isize>();
+            let new_state = (time + 1, location, new_score, opened.clone());
+            println!("New state: {:?}", new_state);
+            states.push_front(new_state);
 
-    //     let path = pathfinding::prelude::dijkstra(
-    //         &current_pos,
-    //         |p| graph.get(p).unwrap().iter().map(|p| (p.clone(), 1)),
-    //         |p| *p == next_pos,
-    //     )
-    //     .unwrap()
-    //     .0;
-    //     // println!("Path: {:?}", path);
+            opened.remove(location);
+        }
 
-    //     let minutes_needed = path.len(); // len() - 1 minutes to get there, 1 minute to open the valve
-    //     for flow in &open_flows {
-    //         total_pressure += flow * minutes_needed;
-    //     }
+        let new_score: isize = score
+            + opened
+                .iter()
+                .map(|&l| flows.get(&l).map_or(0, |v| *v) as isize)
+                .sum::<isize>();
 
-    //     minutes += minutes_needed;
-
-    //     if minutes > 30 {
-    //         break;
-    //     }
-
-    // open_flows.push(valves.get(&next_pos).unwrap().flow_rate);
-
-    // current_pos = next_pos;
-    // }
-
-    // if minutes < 30 {
-    //     total_pressure += (30 - minutes) * open_flows.iter().sum::<usize>();
-    // }
-
-    // println!("Final minutes {}", minutes);
-    // println!("Total pressure {}", total_pressure);
-
-    // total_pressure
+        for option in adj.get(location).unwrap() {
+            let new_state = (time + 1, *option, new_score, opened.clone());
+            println!("New state: {:?}", new_state);
+            states.push_front(new_state);
+        }
+    }
+    best
 }
 
 fn main() {
     use std::time::Instant;
     let now = Instant::now();
 
-    let input = fs::read_to_string("test_input.txt").expect("File not readable");
+    let input = fs::read_to_string("full_input.txt").expect("File not readable");
 
     let mut nodes: BTreeSet<&str> = BTreeSet::new();
     let mut flows: BTreeMap<&str, usize> = BTreeMap::new();
@@ -210,7 +202,7 @@ fn main() {
     // let v: Vec<_> = input.lines().collect();
     println!("{:?}", dist);
 
-    println!("Max flow: {}", max_flow("AA", &flows, &adj, &vec![], 30));
+    // println!("Max flow: {}", max_flow("AA", &flows, &adj, &vec![], 30));
 
     // let non_zero_rooms = flows
     //     .iter()
@@ -250,7 +242,7 @@ fn main() {
     // Part 1
     println!("Part 1");
 
-    // println!("Answer part 1: {:?}", most_pressure);
+    println!("Answer part 1: {:?}", solve(&flows, &adj));
 
     // Part 2
     println!("Part 2");
