@@ -9,13 +9,13 @@ def get_input():
 
 
 def calculate_part1(puzzle_input):
-    print("Calculating for", i)
+    print("Calculating for", puzzle_input)
 
     return 1
 
 
 def calculate_part2(puzzle_input):
-    print("Calculating", i)
+    print("Calculating", puzzle_input)
 
     return 1
 
