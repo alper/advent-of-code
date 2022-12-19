@@ -138,7 +138,12 @@ def calculate_part1(puzzle_input):
 
     for i in tqdm(range(len(puzzle_input))):
         blueprint = puzzle_input[i]
-        ql = (i + 1) * maximum_geodes(tuple(blueprint), 0, 0, 0, 1, 0, 0, 0, 24)
+        print("Blueprint:", blueprint)
+
+        geodes = maximum_geodes(tuple(blueprint), 0, 0, 0, 1, 0, 0, 0, 24)
+        print("Geodes:", geodes)
+
+        ql = (i + 1) * geodes
 
         quality_level_sum += ql
 
@@ -149,12 +154,19 @@ def calculate_part1(puzzle_input):
 
 
 def calculate_part2(puzzle_input):
-    r = []
 
-    for i in tqdm(range(3)):
-        r.append(maximum_geodes(tuple(puzzle_input[i]), 0, 0, 0, 1, 0, 0, 0, 32))
+    i = 0
 
-    return r[0] * r[1] * r[2]
+    print(i, maximum_geodes(tuple(puzzle_input[i]), 0, 0, 0, 1, 0, 0, 0, 32))
+
+    # r = []
+
+    # for i in tqdm(range(3)):
+    #     r.append(maximum_geodes(tuple(puzzle_input[i]), 0, 0, 0, 1, 0, 0, 0, 32))
+    #     print(r)
+
+    # return r[0] * r[1] * r[2]
+    return
 
 
 def part1(puzzle_input):
@@ -169,12 +181,22 @@ def test_calculation():
     assert maximum_geodes(tuple([4, 2, 3, 14, 2, 7]), 0, 0, 0, 1, 0, 0, 0, 24) == 9
     assert maximum_geodes(tuple([2, 3, 3, 8, 3, 12]), 0, 0, 0, 1, 0, 0, 0, 24) == 12
 
-    # assert maximum_geodes(tuple([1, 2, 3, 4, 5, 6]), 1, 1, 1, 1, 2, 2, 2, 2, 1) == 3
-    # assert maximum_geodes(tuple([1, 2, 3, 4, 5, 6]), 1, 1, 1, 1, 5, 2, 6, 2, 2) == 5
+    # First full run
+    assert maximum_geodes(tuple([3, 4, 2, 20, 4, 7]), 0, 0, 0, 1, 0, 0, 0, 24) == 2
+    assert maximum_geodes(tuple([3, 4, 3, 19, 3, 8]), 0, 0, 0, 1, 0, 0, 0, 24) == 1
+    assert maximum_geodes(tuple([4, 4, 2, 14, 4, 15]), 0, 0, 0, 1, 0, 0, 0, 24) == 0
+    assert maximum_geodes(tuple([4, 2, 2, 16, 2, 8]), 0, 0, 0, 1, 0, 0, 0, 24) == 8
+    assert maximum_geodes(tuple([4, 4, 3, 14, 4, 8]), 0, 0, 0, 1, 0, 0, 0, 24) == 1
+    assert maximum_geodes(tuple([4, 3, 2, 7, 3, 8]), 0, 0, 0, 1, 0, 0, 0, 24) == 11
+    assert maximum_geodes(tuple([2, 3, 2, 16, 2, 9]), 0, 0, 0, 1, 0, 0, 0, 24) == 7
+    assert maximum_geodes(tuple([3, 3, 3, 9, 2, 10]), 0, 0, 0, 1, 0, 0, 0, 24) == 7
+    assert maximum_geodes(tuple([2, 4, 3, 14, 4, 9]), 0, 0, 0, 1, 0, 0, 0, 24) == 6
+    assert maximum_geodes(tuple([4, 4, 2, 7, 3, 10]), 0, 0, 0, 1, 0, 0, 0, 24) == 5
+    assert maximum_geodes(tuple([2, 4, 4, 13, 3, 11]), 0, 0, 0, 1, 0, 0, 0, 24) == 5
 
 
 if __name__ == "__main__":
     puzzle_input = get_input()
 
-    # print("Part 1 answer:", part1(puzzle_input))
-    print("Part 2 answer:", part2(puzzle_input))
+    print("Part 1 answer:", part1(puzzle_input))
+    # print("Part 2 answer:", part2(puzzle_input))
