@@ -83,6 +83,11 @@ def calculate_part2(puzzle_input):
         print("Add line", l)
         s.add(eval(l))
 
+        # Need to add a l%r==0 constraint to get the right division
+        if "/" in l:
+            t, eq, l, op, r = l.split()
+            s.add(eval(f"{l} % {r} == 0"))
+
     s.check()
     m = s.model()
     print(m)
