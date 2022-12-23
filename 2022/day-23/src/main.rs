@@ -89,8 +89,9 @@ fn main() {
     println!("Start");
     print_locations(&locations);
 
-    for round in 0..10 {
-        println!("Number of elves: {}", locations.len());
+    let mut round = 0;
+    loop {
+        // println!("Number of elves: {}", locations.len());
 
         // Make the plan for all the new positions
         let mut plan: HashMap<(isize, isize), Vec<(isize, isize)>> = HashMap::new();
@@ -117,12 +118,13 @@ fn main() {
 
             if any_elves {
                 for _ in 0..4 {
-                    println!("Elf {:?}, checking direction {:?}", elf, direction_to_check);
+                    // println!("Elf {:?}, checking direction {:?}", elf, direction_to_check);
 
                     if direction_to_check.checks().iter().all(|offset| {
                         let neighbor_target = (elf.0 + offset.0, elf.1 + offset.1);
                         let neighbor_value = locations.get(&neighbor_target);
-                        println!("Got {:?} for {:?}", neighbor_value, neighbor_target);
+
+                        // println!("Got {:?} for {:?}", neighbor_value, neighbor_target);
 
                         return neighbor_value.is_none();
                     }) {
@@ -131,7 +133,7 @@ fn main() {
                             elf.1 + direction_to_check.move_offset().1,
                         );
 
-                        println!("Trying to go to: {:?}", target);
+                        // println!("Trying to go to: {:?}", target);
 
                         let candidates = plan.entry(target).or_insert(vec![]);
                         candidates.push(*elf);
@@ -149,7 +151,7 @@ fn main() {
                 candidates.push(*elf);
             }
 
-            println!();
+            // println!();
         }
 
         // Deconflict the plan
@@ -164,6 +166,21 @@ fn main() {
             }
         }
 
+        // Check if anybody is moving
+        let mut final_targets: Vec<&(isize, isize)> = final_plan.keys().collect();
+        let mut original_locations: Vec<&(isize, isize)> = locations.iter().collect();
+        final_targets.sort();
+        original_locations.sort();
+
+        if original_locations
+            .iter()
+            .zip(final_targets)
+            .all(|(l, r)| *l == r)
+        {
+            println!("Answer part 2: {}", round + 1);
+            break;
+        }
+
         // Make the move
         locations.clear();
         for key in final_plan.keys() {
@@ -172,28 +189,23 @@ fn main() {
 
         direction = direction.next();
 
-        println!("End of Round {}", round + 1);
-        print_locations(&locations);
+        // println!("End of Round {}", round + 1);
+        // print_locations(&locations);
+
+        if round == 10 {
+            let (minx, miny, maxx, maxy) = get_bounding_box(&locations);
+
+            println!(
+                "Answer part 1: {:?}",
+                ((maxx - minx + 1) * (maxy - miny + 1)) - locations.len() as isize
+            );
+        }
+
+        round += 1;
     }
 
-    println!("{:?}", locations);
-
-    let (minx, miny, maxx, maxy) = get_bounding_box(&locations);
-
-    println!("X {minx}-{maxx} // Y {miny}-{maxy}");
-
-    // Part 1
-    println!("Part 1");
-
-    println!(
-        "Answer part 1: {:?}",
-        ((maxx - minx + 1) * (maxy - miny + 1)) - locations.len() as isize
-    );
-
-    // Part 2
-    println!("Part 2");
-
-    println!("Answer part 2: {:?}", "");
+    // println!("Done");
+    // print_locations(&locations);
 
     let elapsed = now.elapsed();
     println!("Elapsed: {:.2?}", elapsed);
