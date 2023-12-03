@@ -99,12 +99,6 @@ def get_written_digits(s):
 
     return (left_digit, right_digit)
 
-def filter_digits(s):
-    return [int(c) for c in s if c in string.digits]
-
-def add_first_and_last(d):
-    return d[0]*10 + d[-1]
-
 sum = 0
 
 for l in text.split('\n'):
