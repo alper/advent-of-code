@@ -10,10 +10,10 @@ KTJJT 220
 QQQJA 483"""
 
 real_input = sample_input
-real_input = open("input.txt").read()
+# real_input = open("input.txt").read()
 
-cards_ordered = ["A", "K", "Q", "J", "T", "9", "8", "7", "6", "5", "4", "3", "2"]
-types_ordered = ["FIVE_OF_A_KIND", "FOUR_OF_A_KIND", "FULL_HOUSE", "THREE_OF_A_KIND", "TWO_PAIR", "ONE_PAIR", "HIGH_CARD"]
+cards_ordered = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"]
+types_ordered = ["1HIGH_CARD", "2ONE_PAIR", "3TWO_PAIR", "4THREE_OF_A_KIND", "5FULL_HOUSE", "6FOUR_OF_A_KIND", "7FIVE_OF_A_KIND"]
 
 @dataclass
 @total_ordering
@@ -37,26 +37,57 @@ class Hand:
         frequencies = list(counts.values())
 
         if 5 in frequencies:
-            return "FIVE_OF_A_KIND"
+            return "7FIVE_OF_A_KIND"
         elif 4 in frequencies:
-            return "FOUR_OF_A_KIND"
+            return "6FOUR_OF_A_KIND"
         elif 3 in frequencies and 2 in frequencies:
-            return "FULL_HOUSE"
+            return "5FULL_HOUSE"
         elif 3 in frequencies and not 2 in frequencies:
-            return "THREE_OF_A_KIND"
+            return "4THREE_OF_A_KIND"
         elif frequencies.count(2) == 2:
-            return "TWO_PAIR"
+            return "3TWO_PAIR"
         elif 2 in frequencies and frequencies.count(1) == 3:
-            return "ONE_PAIR"
+            return "2ONE_PAIR"
         elif frequencies.count(1) == 5:
-            return "HIGH_CARD"
+            return "1HIGH_CARD"
 
     @staticmethod
     def get_typ_with_joker(i):
-        return "HIGH_CARD"
+        print("With joker", i)
+
+        if i == "JJJJJ":
+            return "7FIVE_OF_A_KIND"
+
+        typs = []
+        candidates = [list(i)]
+
+        while candidates:
+            print(candidates, typs)
+            h = candidates.pop()
+
+            if not 'J' in h:
+                typs.append(Hand.get_typ(''.join(h)))
+            else:
+                # c is a list of cards
+                h.remove('J')
+
+                for other_card in {card for card in h if card != 'J'}:
+                    print("Other card", other_card)
+                    new_hand = h.copy()
+                    new_hand.append(other_card)
+
+                    print("new_hand", new_hand)
+
+                    if not 'J' in new_hand:
+                        typs.append(Hand.get_typ(''.join(new_hand)))
+                    else:
+                        candidates.append(new_hand)
+
+        print("Typs", typs)
+        return max(typs)
 
     def __lt__(self, other):
-        if self.typ == other.typ:
+        if self.typ_with_joker == other.typ_with_joker:
             for i in range(len(self.raw)):
                 if self.raw[i] == other.raw[i]:
                     continue
@@ -65,9 +96,7 @@ class Hand:
                     return cards_ordered.index(self.raw[i]) < cards_ordered.index(other.raw[i])
         else:
             # Compare the types
-            return types_ordered.index(self.typ) < types_ordered.index(other.typ)
-
-        return self.typ < other.typ
+            return types_ordered.index(self.typ_with_joker) < types_ordered.index(other.typ_with_joker)
 
     def __eq__(self, other):
         return self.raw == other.raw
@@ -82,15 +111,17 @@ for line in real_input.split("\n"):
 
     hands.append(hand)
 
-hands.sort()
+hands.sort(reverse=True)
 
-print(hands)
+for hand in hands:
+    print(hand.raw, hand.typ, hand.typ_with_joker)
 
 total = 0
 for i, h in enumerate(hands):
-    print("Rank:", len(hands)-i)
-    print("Bid:", h.bid, h.raw)
+    # print("Rank:", len(hands)-i)
+    # print("Bid:", h.bid, h.raw)
 
     total += h.bid * (len(hands)-i)
 
-print("Solution:", total)
+print("Solution :", total)
+
