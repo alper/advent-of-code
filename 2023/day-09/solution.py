@@ -1,5 +1,6 @@
 from typing import List
 import itertools
+from collections import deque
 
 sample_input = """0 3 6 9 12 15
 1 3 6 10 15 21
@@ -20,16 +21,16 @@ def window(seq, n=2):
         yield result
 
 
-def parse_line(line: str) -> List[int]:
-    return [int(x) for x in line.split()]
+def parse_line(line: str) -> deque[int]:
+    return deque([int(x) for x in line.split()])
 
-def next_number(sequence: List[int]) -> int:
+def next_and_previous_number(sequence: deque[int]) -> (int, int):
     print("Sequence:", sequence)
 
     sequences = [sequence]
 
     while True:
-        new_sequence = [b-a for a, b in window(sequences[-1], 2)]
+        new_sequence = deque([b-a for a, b in window(sequences[-1], 2)])
         print("Diff:", new_sequence)
 
         sequences.append(new_sequence)
@@ -37,38 +38,27 @@ def next_number(sequence: List[int]) -> int:
         if all(x == 0 for x in new_sequence):
             break
 
-    last_number = sequences[0][-1]
-
     # print(sequences)
 
     for i in range(len(sequences) - 1, 0, -1):
-        l = sequences[i][-1]
-        print("Adding", l)
+        last = sequences[i][-1]
+        first = sequences[i][0]
 
-        sequences[i-1].append(sequences[i-1][-1] + l)
+        # print("Adding", l)
 
-    return sequences[0][-1]
+        sequences[i-1].append(sequences[i-1][-1] + last)
+        sequences[i-1].appendleft(sequences[i-1][0] - first)
 
-l = [parse_line(line) for line in real_input.splitlines()]
+    return (sequences[0][0], sequences[0][-1])
+
+parsed = [parse_line(line) for line in real_input.splitlines()]
 
 total = 0
 
 print("DEBUG")
 
-for x in l:
-    n = next_number(x)
+next_and_previous_number = [next_and_previous_number(l) for l in parsed]
 
-    print(f"[{n}] number: {x}")
-    total += n
+print("Solution part 1:", sum([l for f, l in next_and_previous_number]))
 
-# n = [next_number(x) for x in l]
-
-print("Solution:", total)
-
-print("DEBUG SPECIFIC")
-
-p = parse_line("12 16 26 51 103 202 405 870 1965 4434 9640 19935 39296 74578 138165 253576 466866 868644 1634430 3095131 5854885")
-n = next_number(p)
-print("Optupt", n)
-
-# print(next_number(l[0]))
+print("Solution part 2:", sum([f for f, l in next_and_previous_number]))
