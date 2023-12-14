@@ -121,7 +121,7 @@ candidates = [
     [start, (start[0], start[1]+1)], #F
 ]
 
-lengths = []
+lengths = {}
 
 for candidate in candidates:
     print("Trying:", candidate)
@@ -141,8 +141,19 @@ for candidate in candidates:
     print("Pipes:", [locations.get(c) for c in candidate])
     print("Len locs:", len(candidate))
     print()
-    lengths.append(len(candidate))
+    lengths[len(candidate)] = candidate
 
 
 print("Lengths:", lengths)
-print("Max length:", max(lengths))
+print("Max length:", max(lengths.keys()))
+
+print("Solution path:")
+path = lengths[max(lengths.keys())]
+
+for i in range(150):
+    for j in range(150):
+        if (j, i) in path:
+            print(locations[(j, i)], end='')
+        else:
+            print(' ', end='')
+    print()
