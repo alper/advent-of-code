@@ -1,4 +1,5 @@
 from typing import Dict, Tuple, List
+
 import math
 
 sample_input = """-L|F7
@@ -13,147 +14,222 @@ SJLL7
 |F--J
 LJ.LJ"""
 
-real_input = sample_input
-real_input = open("input.txt").read()
+real_input = sample_input2
+# real_input = open("input.txt").read()
 
-locations = {}
+class Field:
+    def __init__(self, input: str):
+        self.grid: Dict[Tuple[int, int], str] = {}
+        self.start: Tuple[int, int] = None
 
-lines = real_input.splitlines()
+        self.max_y = 0
+        self.max_x = 0
 
-start = None
-for y, line in enumerate(lines):
-    for x, char in enumerate(line):
-        locations[(x, y)] = char
+        for y, line in enumerate(input.splitlines()):
+            for x, char in enumerate(line):
+                self.grid[(x, y)] = char
 
-        if char == 'S':
-            start = (x, y)
+                if char == 'S':
+                    self.start = (x, y)
 
-print(locations)
+                self.max_x = max(self.max_x, x)
+                self.max_y = max(self.max_y, y)
 
-print("Start:", start)
-locs = [start]
+    def str_path(self, path: List[Tuple[int, int]]) -> str:
+        out_lines = []
 
-def add_location(locs: List[Tuple[int, int]], locations: Dict[Tuple[int, int], str]) -> (int, int):
-    x, y = locs[-1]
-    pipe = locations.get(locs[-1])
+        for i in range(field.max_y+1):
+            out_line = []
 
-    if not pipe:
-        return locs
+            for j in range(field.max_x+1):
+                if (j, i) in path:
+                    out_line.append(field.grid[(j, i)])
+                else:
+                    out_line.append(' ')
+            out_lines.append(''.join(out_line))
+        return '\n'.join(out_lines)
 
-    # if pipe == 'S':
-    #     pipe = 'F'
+    def str_inside_out_path(self, path: List[Tuple[int, int]]) -> str:
+        out_lines = []
 
-    if pipe == '|':
-        if locs[-2][1] == y-1:
-            n = (x, y+1)
-            if locations.get(n) in ['|', 'L', 'J']:
-                locs.append(n)
-        else:
-            n = (x, y-1)
-            if locations.get(n) in ['|', '7', 'F']:
-                locs.append(n)
-    elif pipe == '-':
-        if locs[-2][0] == x-1:
-            n = (x+1, y)
-            if locations.get(n) in ['-', 'J', '7']:
-                locs.append(n)
-        else:
-            n = (x-1, y)
-            if locations.get(n) in ['-', 'L', 'F']:
-                locs.append(n)
-    elif pipe == 'L':
-        if locs[-2][1] == y-1:
-            n = (x+1, y)
-            if locations.get(n) in ['-', 'J', '7']:
-                locs.append(n)
-        else:
-            n = (x, y-1)
-            if locations.get(n) in ['|', '7', 'F']:
-                locs.append(n)
-    elif pipe == 'J':
-        if locs[-2][1] == y-1:
-            n = (x-1, y)
-            if locations.get(n) in ['-', 'L', 'F']:
-                locs.append(n)
-        else:
-            n = (x, y-1)
-            if locations.get(n) in ['|', '7', 'F']:
-                locs.append(n)
-    elif pipe == '7':
-        if locs[-2][0] == x-1:
-            n = (x, y+1)
-            if locations.get(n) in ['|', 'L', 'J']:
-                locs.append(n)
-        else:
-            n = (x-1, y)
-            if locations.get(n) in ['-', 'L', 'F']:
-                locs.append(n)
-    elif pipe == 'F':
-        if locs[-2][0] == x+1:
-            n = (x, y+1)
-            if locations.get(n) in ['|', 'L', 'J']:
-                locs.append(n)
-        else:
-            n = (x+1, y)
-            if locations.get(n) in ['-', 'J', '7']:
-                locs.append(n)
+        for i in range(field.max_y+1):
+            out_line = []
 
-    return locs
+            for j in range(field.max_x+1):
+                cross_count = 0
+
+                for k in range(max(self.max_y-i, self.max_x-j)):
+                    c = self.grid.get((j+k, i+k))
+
+                    pipe_types = ['|', '-', 'L', 'J', '7', 'F']
+
+                    if c in ['|', '-', 'J', 'F']:
+                        cross_count += 1
+
+                    inside = False
+                    if cross_count % 2 == 0:
+                        # Inside
+                        inside = True
+
+                    if (j+k, i+k) in path:
+                        out_line.append(c)
+                    else:
+                        if inside:
+                            out_line.append('X')
+                        else:
+                            out_line.append('O')
+
+            out_lines.append(''.join(out_line))
+        return '\n'.join(out_lines)
+
+    def __str__(self) -> str:
+        out_lines = []
+
+        for i in range(field.max_y+1):
+            out_line = []
+
+            for j in range(field.max_x+1):
+                out_line.append(field.grid[(j, i)])
+
+            out_lines.append(''.join(out_line))
+        return '\n'.join(out_lines)
+
+    def add_to_path(self, path: List[Tuple[int, int]]) -> List[Tuple[int, int]]:
+        x, y = path[-1] # Last location
+        pipe = self.grid.get(path[-1])
+
+        if not pipe:
+            return path
+
+        # if pipe == 'S':
+        #     pipe = 'F'
+
+        if pipe == '|':
+            if path[-2][1] == y-1:
+                n = (x, y+1)
+                if self.grid.get(n) in ['|', 'L', 'J']:
+                    path.append(n)
+            else:
+                n = (x, y-1)
+                if self.grid.get(n) in ['|', '7', 'F']:
+                    path.append(n)
+        elif pipe == '-':
+            if path[-2][0] == x-1:
+                n = (x+1, y)
+                if self.grid.get(n) in ['-', 'J', '7']:
+                    path.append(n)
+            else:
+                n = (x-1, y)
+                if self.grid.get(n) in ['-', 'L', 'F']:
+                    path.append(n)
+        elif pipe == 'L':
+            if path[-2][1] == y-1:
+                n = (x+1, y)
+                if self.grid.get(n) in ['-', 'J', '7']:
+                    path.append(n)
+            else:
+                n = (x, y-1)
+                if self.grid.get(n) in ['|', '7', 'F']:
+                    path.append(n)
+        elif pipe == 'J':
+            if path[-2][1] == y-1:
+                n = (x-1, y)
+                if self.grid.get(n) in ['-', 'L', 'F']:
+                    path.append(n)
+            else:
+                n = (x, y-1)
+                if self.grid.get(n) in ['|', '7', 'F']:
+                    path.append(n)
+        elif pipe == '7':
+            if path[-2][0] == x-1:
+                n = (x, y+1)
+                if self.grid.get(n) in ['|', 'L', 'J']:
+                    path.append(n)
+            else:
+                n = (x-1, y)
+                if self.grid.get(n) in ['-', 'L', 'F']:
+                    path.append(n)
+        elif pipe == 'F':
+            if path[-2][0] == x+1:
+                n = (x, y+1)
+                if self.grid.get(n) in ['|', 'L', 'J']:
+                    path.append(n)
+            else:
+                n = (x+1, y)
+                if self.grid.get(n) in ['-', 'J', '7']:
+                    path.append(n)
+
+        return path
+
+    def get_starting_paths(self) -> List[List[Tuple[int, int]]]:
+        return [
+            [self.start, (self.start[0], self.start[1]-1)], #|
+            [self.start, (self.start[0], self.start[1]+1)], #|
+            [self.start, (self.start[0]+1, self.start[1])], #-
+            [self.start, (self.start[0]-1, self.start[1])], #-
+            [self.start, (self.start[0], self.start[1]-1)], #L
+            [self.start, (self.start[0]+1, self.start[1])], #L
+            [self.start, (self.start[0]-1, self.start[1])], #J
+            [self.start, (self.start[0], self.start[1]-1)], #J
+            [self.start, (self.start[0]-1, self.start[1])], #7
+            [self.start, (self.start[0], self.start[1]+1)], #7
+            [self.start, (self.start[0]+1, self.start[1])], #F
+            [self.start, (self.start[0], self.start[1]+1)], #F
+        ]
+
+    def get_path_from_start(self) -> List[Tuple[int, int]]:
+        candidates = self.get_starting_paths()
+
+        lengths = {}
+
+        for candidate in candidates:
+            print("Trying:", candidate)
+
+            while True:
+                prev_l = len(candidate)
+
+                candidate = self.add_to_path(candidate)
+
+                if len(candidate) == prev_l:
+                    break
+
+                if candidate[-1] == candidate[0]:
+                    break
+
+            print("Candidate:", candidate)
+            print("Pipes:", [field.grid.get(c) for c in candidate])
+            print("Len locs:", len(candidate))
+            print()
+
+            lengths[len(candidate)] = candidate
+
+        print("Lengths:", lengths)
+        print("Max length:", max(lengths.keys()))
+
+        print("Solution path:")
+        path = lengths[max(lengths.keys())]
+
+        return path
+
+
+
+field = Field(real_input)
+
+print(field.grid)
+
+print("Start:", field.start)
 
 
 counter = 0
-locs = [start, (1, 2)]
+path = [field.start, (1, 2)]
 
-pipe_types = ['|', '-', 'L', 'J', '7', 'F']
+path = field.get_path_from_start()
 
-candidates = [
-    [start, (start[0], start[1]-1)], #|
-    [start, (start[0], start[1]+1)], #|
-    [start, (start[0]+1, start[1])], #-
-    [start, (start[0]-1, start[1])], #-
-    [start, (start[0], start[1]-1)], #L
-    [start, (start[0]+1, start[1])], #L
-    [start, (start[0]-1, start[1])], #J
-    [start, (start[0], start[1]-1)], #J
-    [start, (start[0]-1, start[1])], #7
-    [start, (start[0], start[1]+1)], #7
-    [start, (start[0]+1, start[1])], #F
-    [start, (start[0], start[1]+1)], #F
-]
+print(field.str_path(path))
 
-lengths = {}
+print()
+print(field)
 
-for candidate in candidates:
-    print("Trying:", candidate)
+print()
 
-    while True:
-        prev_l = len(candidate)
-
-        candidate = add_location(candidate, locations)
-
-        if len(candidate) == prev_l:
-            break
-
-        if candidate[-1] == candidate[0]:
-            break
-
-    print("Candidate:", candidate)
-    print("Pipes:", [locations.get(c) for c in candidate])
-    print("Len locs:", len(candidate))
-    print()
-    lengths[len(candidate)] = candidate
-
-
-print("Lengths:", lengths)
-print("Max length:", max(lengths.keys()))
-
-print("Solution path:")
-path = lengths[max(lengths.keys())]
-
-for i in range(150):
-    for j in range(150):
-        if (j, i) in path:
-            print(locations[(j, i)], end='')
-        else:
-            print(' ', end='')
-    print()
+print(field.str_inside_out_path(path))
