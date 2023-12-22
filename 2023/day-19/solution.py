@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import List, Set
+from copy import deepcopy
 
 sample_input = """px{a<2006:qkq,m>2090:A,rfg}
 pv{a>1716:R,A}
@@ -63,6 +64,8 @@ class Criterium:
     def exclusive_set(self) -> Set[int]:
         return FULL_RANGE - self.inclusive_set()
 
+    def __str__(self):
+        return f"{self.cat}{self.comparator}{self.val}:{self.dest}"
 
 @dataclass
 class Workflow:
@@ -71,24 +74,48 @@ class Workflow:
     default: str
 
     def dest(self, part: Part) -> str:
+        """The destination in this workflow where a part goes."""
         for crit in self.crits:
             if crit.accept(part):
                 return crit.dest
 
         return self.default
 
-    def is_dest(self, dest: str) -> bool:
-        if self.default == dest:
-            return True
+    def has_dest(self, dest: str) -> List[int]:
+        """List the indexes of the criteria that have a destination of this name."""
+        out = []
 
-        for crit in self.crits:
+        for i, crit in enumerate(self.crits):
             if crit.dest == dest:
-                return True
-        return False
+                out.append(i)
+        
+        if self.default == dest:
+            out.append(-1)
+        
+        return out
+    
+    def __str__(self):
+        cr = ','.join([str(c) for c in self.crits])
+        return f"Workflow {self.name}: {cr} ({self.default})"
 
 FULL_RANGE = set(range(1, 4001))
 
 workflows = {}
+
+def get_path_to(name: str, workflows) -> List[str]:
+    out = [name]
+
+    while True:
+        for workflow in workflows.values():
+            if workflow.has_dest(name):
+                name = workflow.name
+                out.append(name)
+                
+                break
+
+        if name == 'in':
+            break
+    return out
 
 for line in real_input.splitlines():
     if line:
@@ -139,38 +166,58 @@ for part in parts:
         workflow = workflows[dest]
 
 print("To be shipped:", total, "parts")
+print()
 
 # Part 2
 
+possibilities = 0
+
 for workflow in workflows.values():
-    if workflow.default == 'A':
+    print(workflow)
+    a_dest = workflow.has_dest('A')
+
+    for ad in a_dest:
+        accepted_ranges = {a: deepcopy(FULL_RANGE) for a in ['x', 'm', 'a', 's']}
+        if ad == -1:
+            # print("Tracing terminal", ad)
+            positive = []
+            negative = workflow.crits
+        else:
+            # print("Tracing criteria", ad)
+            positive = [workflow.crits[ad]]
+            negative = workflow.crits[:ad]
+
+        for crit in positive:
+            accepted_ranges[crit.cat] &= crit.inclusive_set()
+        for crit in negative:
+            accepted_ranges[crit.cat] -= crit.inclusive_set()
+
         pos = workflow.name
 
-        print('A')
-
         while True:
-            print("Pos", pos)
-            for workflow in workflows.values():
-                if workflow.is_dest(pos):
-                    pos = workflow.name
+            for workflow_search in workflows.values():
+                w_dest = workflow_search.has_dest(pos)
+                if w_dest:
+                    pos = workflow_search.name
+
+                    if w_dest[0] == -1:
+                        positive = []
+                        negative = workflow_search.crits
+                    else:
+                        positive = [workflow_search.crits[w_dest[0]]]
+                        negative = workflow_search.crits[:w_dest[0]]
+                    
+                    for crit in positive:
+                        accepted_ranges[crit.cat] &= crit.inclusive_set()
+                    for crit in negative:
+                        accepted_ranges[crit.cat] -= crit.inclusive_set()
+                    
                     break
 
             if pos == 'in':
-                print('in')
                 break
-        print()
-    elif workflow.is_dest('A'):
-        print('A')
-        pos = workflow.name
+        print(f"FINAL for {workflow.name}", [(a, min(accepted_ranges[a]), max(accepted_ranges[a])) for a in ['x', 'm', 'a', 's']])
 
-        while True:
-            print("Pos", pos)
-            for workflow in workflows.values():
-                if workflow.is_dest(pos):
-                    pos = workflow.name
-                    break
+        possibilities += len(accepted_ranges['x']) * len(accepted_ranges['m']) * len(accepted_ranges['a']) * len(accepted_ranges['s'])
 
-            if pos == 'in':
-                print('in')
-                break
-        print()
+print("Possible parts:", possibilities)
