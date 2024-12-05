@@ -10,7 +10,7 @@ CONSTANT: test-input "3   4
 3   9
 3   3"
 
-: real-input  ( -- string ) "/Users/alpercugun/Documents/projects/advent-of-code/2024/day-01/input.txt" utf8 file-contents ;
+: real-input  ( -- string ) "vocab:day-01/input.txt" utf8 file-contents ;
 
 : numbers>split ( seq -- seq seq ) dup [ [ first ] map ] dip [ second ] map ;
 
