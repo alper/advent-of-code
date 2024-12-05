@@ -1,6 +1,6 @@
 ! Copyright (C) 2024 Your name.
 ! See https://factorcode.org/license.txt for BSD license.
-USING: kernel math math.parser prettyprint sequences splitting strings ;
+USING: io.files io.encodings.utf8 kernel math math.parser prettyprint sequences sorting splitting strings ;
 IN: 2024.day-01
 
 CONSTANT: test-input "3   4
@@ -10,12 +10,14 @@ CONSTANT: test-input "3   4
 3   9
 3   3"
 
+: real-input  ( -- string ) "/Users/alpercugun/Documents/projects/advent-of-code/2024/day-01/input.txt" utf8 file-contents ;
+
 : numbers>split ( seq -- seq seq ) dup [ [ first ] map ] dip [ second ] map ;
 
-: listofpairs>pairoflists ( string -- seq seq ) split-lines [ "   " split-subseq ] map numbers>split [ [ >string ] map ] bi@ ;
+: listofpairs>pairoflists ( string -- seq seq ) split-lines [ "   " split-subseq ] map numbers>split [ [ >string string>number ] map sort ] bi@ ;
 
-: pairoflists>distance ( seq seq -- seq ) [ [ string>number ] dip string>number - abs ] 2map sum ;
+: pairoflists>distance ( seq seq -- seq ) [ - abs ] 2map sum ;
 
-: part1 ( -- ) test-input listofpairs>pairoflists pairoflists>distance pprint ;
+: part1 ( -- ) real-input listofpairs>pairoflists pairoflists>distance pprint ;
 
 MAIN: part1
