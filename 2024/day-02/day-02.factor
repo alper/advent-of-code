@@ -16,4 +16,4 @@ CONSTANT: test-input "7 6 4 2 1
 
 : part-1 ( -- x ) real-input split-lines [ " " split-subseq ] map [ [ string>number ] map ] map [ [ all-inc/dec ] [ all-within ] bi and ] map sift length ;
 
-MAIN: [ "test" pprint ]
+MAIN: [ part-1 . ]
