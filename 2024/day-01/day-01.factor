@@ -22,4 +22,8 @@ CONSTANT: test-input "3   4
 
 : part1 ( -- ) real-input listofpairs>pairoflists pairoflists>distance pprint ;
 
-MAIN: part1
+: number>score ( seq number -- number ) dup [ [ = ] curry count ] dip * ;
+
+: part2 ( -- ) real-input listofpairs>pairoflists swap [ [ number>score ] curry ] map [ call( seq -- seq ) ] with map sum pprint ;
+
+MAIN: part2
