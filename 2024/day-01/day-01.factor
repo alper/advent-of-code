@@ -14,7 +14,9 @@ CONSTANT: test-input "3   4
 
 : numbers>split ( seq -- seq seq ) dup [ [ first ] map ] dip [ second ] map ;
 
-: listofpairs>pairoflists ( string -- seq seq ) split-lines [ "   " split-subseq ] map numbers>split [ [ >string string>number ] map sort ] bi@ ;
+: listofpairs>pairoflists ( string -- seq seq ) split-lines
+    [ "   " split-subseq ] map
+    numbers>split [ [ >string string>number ] map sort ] bi@ ;
 
 : pairoflists>distance ( seq seq -- seq ) [ - abs ] 2map sum ;
 
