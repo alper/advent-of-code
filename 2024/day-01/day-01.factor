@@ -1,6 +1,6 @@
 ! Copyright (C) 2024 Your name.
 ! See https://factorcode.org/license.txt for BSD license.
-USING: io.files io.encodings.utf8 kernel math math.parser prettyprint sequences sorting splitting strings ;
+USING: io io.files io.encodings.utf8 kernel math math.parser prettyprint sequences sorting splitting strings ;
 IN: 2024.day-01
 
 CONSTANT: test-input "3   4
@@ -20,10 +20,10 @@ CONSTANT: test-input "3   4
 
 : pairoflists>distance ( seq seq -- seq ) [ - abs ] 2map sum ;
 
-: part1 ( -- ) real-input listofpairs>pairoflists pairoflists>distance pprint ;
+: part1 ( -- x ) real-input listofpairs>pairoflists pairoflists>distance ;
 
 : number>score ( seq number -- number ) dup [ [ = ] curry count ] dip * ;
 
-: part2 ( -- ) real-input listofpairs>pairoflists swap [ [ number>score ] curry ] map [ call( seq -- seq ) ] with map sum pprint ;
+: part2 ( -- x ) real-input listofpairs>pairoflists swap [ number>score ] with map sum ;
 
-MAIN: part2
+MAIN: [ nl part1 . part2 . ]
