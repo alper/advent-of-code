@@ -11,17 +11,23 @@ Input ← $ L68
 
 Input ← &fras "01-input.txt"
 
-⊜□ ⊸≠ @\n Input
+⊜□ ⊸≠ @\n Input # Split input by lines
 
-≡(□ ⍣(˜↯ ¯1 ⊂ [] ⋕ °(⊂@L)|˜↯ 1 ⊂ [] ⋕ °(⊂@R)) °□)
+# For each element replace it with that number of 1s or -1s (right and left)
+≡(□ ⍣(˜↯ ¯1 ⊂ [] ⋕ °(⊂@L)|˜↯ 1 ⊂ [] ⋕ °(⊂@R)) °□) 
 
+# join all the lists together into a big list
 /◇⊂
 
+# Prepend with 50
 ⊂ 50
 
+# Add while maintaining intermediate results
 \(+)
 
+# Any step that's mod100 is passing through the origin
 ◿ 100
-= 0
 
+# Count them
+= 0
 /+
